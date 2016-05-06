@@ -51,6 +51,6 @@ public class IntToINT64 extends Token {
 
     @Override
     public String toString(UnrealPackageContext context) {
-        return "int64(" + value.toString(context) + ")";
+        return "INT64(" + value.toString(context) + ")";
     }
 }

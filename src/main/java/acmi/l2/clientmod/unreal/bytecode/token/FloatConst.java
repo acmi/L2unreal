@@ -51,6 +51,6 @@ public class FloatConst extends Token {
 
     @Override
     public String toString(UnrealPackageContext context) {
-        return String.format(Locale.US, "%f", value);
+        return String.format(Locale.US, "%s", value);
     }
 }

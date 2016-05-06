@@ -51,6 +51,6 @@ public class IntToString extends Token {
 
     @Override
     public String toString(UnrealPackageContext context) {
-        return "string(" + value.toString(context) + ")";
+        return value.toString(context);
     }
 }

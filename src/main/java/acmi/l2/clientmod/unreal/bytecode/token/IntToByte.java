@@ -51,6 +51,6 @@ public class IntToByte extends Token {
 
     @Override
     public String toString(UnrealPackageContext context) {
-        return "byte(" + value.toString(context) + ")";
+        return value.toString(context);
     }
 }
