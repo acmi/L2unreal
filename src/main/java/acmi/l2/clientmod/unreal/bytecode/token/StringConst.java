@@ -22,6 +22,7 @@
 package acmi.l2.clientmod.unreal.bytecode.token;
 
 import acmi.l2.clientmod.unreal.UnrealPackageContext;
+import org.apache.commons.lang3.StringEscapeUtils;
 
 public class StringConst extends Token {
     public static final int OPCODE = 0x1f;
@@ -43,12 +44,12 @@ public class StringConst extends Token {
     @Override
     public String toString() {
         return "StringConst("
-                + "\"" + value.replaceAll("\"", "\\\\\"") + "\""
+                + "\"" + StringEscapeUtils.escapeJava(value) + "\""
                 + ')';
     }
 
     @Override
     public String toString(UnrealPackageContext context) {
-        return "\"" + value.replaceAll("\"", "\\\\\"") + "\"";
+        return "\"" + StringEscapeUtils.escapeJava(value) + "\"";
     }
 }
