@@ -23,7 +23,7 @@ package acmi.l2.clientmod.unreal.core;
 
 import acmi.l2.clientmod.unreal.annotation.ObjectRef;
 
-public class Field extends Object{
+public class Field extends Object {
     @ObjectRef
     public Object superField;
     @ObjectRef

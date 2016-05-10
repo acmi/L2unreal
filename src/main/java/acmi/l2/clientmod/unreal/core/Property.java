@@ -41,7 +41,7 @@ public class Property extends Field {
     public int replicationOffset;
 
     @ReadMethod
-    public final void readProperty(ObjectInput<UnrealRuntimeContext> input) throws IOException{
+    public final void readProperty(ObjectInput<UnrealRuntimeContext> input) throws IOException {
         arrayDimension = input.readUnsignedShort();
         elementSize = input.readUnsignedShort();
         propertyFlags = input.readInt();

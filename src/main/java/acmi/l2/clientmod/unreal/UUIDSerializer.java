@@ -29,7 +29,8 @@ import acmi.l2.clientmod.io.Serializer;
 import java.io.UncheckedIOException;
 import java.util.UUID;
 
-import static acmi.l2.clientmod.io.ByteUtil.*;
+import static acmi.l2.clientmod.io.ByteUtil.uuidFromBytes;
+import static acmi.l2.clientmod.io.ByteUtil.uuidToBytes;
 
 public class UUIDSerializer implements Serializer<UUID, Context> {
     @Override
@@ -40,7 +41,8 @@ public class UUIDSerializer implements Serializer<UUID, Context> {
     }
 
     @Override
-    public <S extends UUID> void readObject(S obj, ObjectInput<Context> input) throws UncheckedIOException {}
+    public <S extends UUID> void readObject(S obj, ObjectInput<Context> input) throws UncheckedIOException {
+    }
 
     @Override
     public <S extends UUID> void writeObject(S obj, ObjectOutput<Context> output) throws UncheckedIOException {

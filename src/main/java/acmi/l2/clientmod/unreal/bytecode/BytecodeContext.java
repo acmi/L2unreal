@@ -31,7 +31,7 @@ public class BytecodeContext extends UnrealPackageContext {
         super(unrealPackage);
     }
 
-    public BytecodeContext(UnrealPackageContext context){
+    public BytecodeContext(UnrealPackageContext context) {
         super(context.getUnrealPackage());
     }
 

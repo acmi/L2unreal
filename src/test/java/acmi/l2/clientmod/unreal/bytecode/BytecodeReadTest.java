@@ -31,13 +31,14 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
 
 public class BytecodeReadTest {
     @Test
     public void test() {
         File[] files = new File("src/test/resources/system")
-                .listFiles((dir, name)->name.endsWith(".u"));
+                .listFiles((dir, name) -> name.endsWith(".u"));
         for (File file : files) {
             try (UnrealPackage up = new UnrealPackage(file, true)) {
                 up.getExportTable().stream()

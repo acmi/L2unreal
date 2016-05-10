@@ -24,11 +24,9 @@ package acmi.l2.clientmod.unreal.bytecode;
 import acmi.l2.clientmod.io.UnrealPackage;
 import acmi.l2.clientmod.unreal.Environment;
 import acmi.l2.clientmod.unreal.UnrealSerializerFactory;
-import acmi.l2.clientmod.unreal.core.Class;
 import org.junit.Test;
 
 import java.io.File;
-import java.util.Collection;
 
 public class ObjectReadTest {
     @Test
@@ -37,7 +35,7 @@ public class ObjectReadTest {
         UnrealSerializerFactory serializerFactory = new UnrealSerializerFactory(environment);
 
         File[] files = new File("src/test/resources/system")
-                .listFiles((dir, name)->name.endsWith(".u"));
+                .listFiles((dir, name) -> name.endsWith(".u"));
         for (File file : files) {
             try (UnrealPackage up = new UnrealPackage(file, true)) {
                 up.getExportTable().forEach(serializerFactory::getOrCreateObject);

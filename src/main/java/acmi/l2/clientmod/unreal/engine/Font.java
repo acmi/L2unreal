@@ -8,10 +8,10 @@ public class Font extends Object {
     public Character[] characters;
     @ObjectRef
     public Object[] textureList;
-    public int unk1,unk2;
+    public int unk1, unk2;
 
-    public static class Character{
-        public int x,y,width,height;
+    public static class Character {
+        public int x, y, width, height;
         @Compact
         public int textureIndex;
     }

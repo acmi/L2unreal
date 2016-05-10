@@ -41,7 +41,7 @@ public class Function extends Struct {
     public int replicationOffset;
 
     @ReadMethod
-    public void read(ObjectInput input) throws IOException{
+    public void read(ObjectInput input) throws IOException {
         nativeIndex = input.readUnsignedShort();
         operatorPrecedence = input.readUnsignedByte();
         functionFlags = input.readInt();

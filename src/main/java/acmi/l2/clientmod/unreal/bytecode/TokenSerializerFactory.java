@@ -122,7 +122,7 @@ public class TokenSerializerFactory extends ReflectionSerializerFactory<Bytecode
     }
 
     private static void writeString(ObjectOutput<BytecodeContext> output, String string) throws UncheckedIOException {
-        output.writeBytes((string+'\0').getBytes(output.getCharset()));
+        output.writeBytes((string + '\0').getBytes(output.getCharset()));
     }
 
     private static Token readToken(ObjectInput<BytecodeContext> input) throws UncheckedIOException {
