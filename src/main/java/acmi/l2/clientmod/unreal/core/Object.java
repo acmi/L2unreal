@@ -45,7 +45,8 @@ public class Object {
         entry = input.getContext().getEntry();
 
         if (getFlags(input.getContext().getEntry().getObjectFlags()).contains(HasStack)) {
-            stateFrame = input.readObject(StateFrame.class);
+            stateFrame = new StateFrame();
+            input.getSerializerFactory().forClass(StateFrame.class).readObject(stateFrame, input);
         }
 
         if (!(this instanceof Class))
@@ -59,63 +60,12 @@ public class Object {
 
     public static class StateFrame {
         @Compact
-        private int node;
+        public int node;
         @Compact
-        private int stateNode;
-        private long probeMask;
-        private int latentAction;
+        public int stateNode;
+        public long probeMask;
+        public int latentAction;
         @Compact
-        private int offset;
-
-        public StateFrame() {
-        }
-
-        public StateFrame(int node, int stateNode, long probeMask, int latentAction, int offset) {
-            this.node = node;
-            this.stateNode = stateNode;
-            this.probeMask = probeMask;
-            this.latentAction = latentAction;
-            this.offset = offset;
-        }
-
-        public int getNode() {
-            return node;
-        }
-
-        public void setNode(int node) {
-            this.node = node;
-        }
-
-        public int getStateNode() {
-            return stateNode;
-        }
-
-        public void setStateNode(int stateNode) {
-            this.stateNode = stateNode;
-        }
-
-        public long getProbeMask() {
-            return probeMask;
-        }
-
-        public void setProbeMask(long probeMask) {
-            this.probeMask = probeMask;
-        }
-
-        public int getLatentAction() {
-            return latentAction;
-        }
-
-        public void setLatentAction(int latentAction) {
-            this.latentAction = latentAction;
-        }
-
-        public int getOffset() {
-            return offset;
-        }
-
-        public void setOffset(int offset) {
-            this.offset = offset;
-        }
+        public int offset;
     }
 }
