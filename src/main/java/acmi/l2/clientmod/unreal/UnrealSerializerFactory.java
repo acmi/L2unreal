@@ -235,7 +235,8 @@ public class UnrealSerializerFactory extends ReflectionSerializerFactory<UnrealR
 
                         Serializer serializer = getSerializerFactory().forClass(clazz);
                         java.lang.Object obj = serializer.instantiate(this);
-                        assert obj instanceof Object;
+                        if (!(obj instanceof acmi.l2.clientmod.unreal.core.Object))
+                            throw new RuntimeException("USE input.getSerializerFactory().forClass(class).readObject(object, input);");
                         return obj;
                     }
                 });
