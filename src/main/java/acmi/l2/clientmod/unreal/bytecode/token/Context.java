@@ -38,10 +38,6 @@ public class Context extends Token {
     public Context(Token token1, int wSkip, int bSize, Token token2) {
         this.token1 = token1;
         this.wSkip = wSkip;
-        if (wSkip > 255) {
-            System.out.println("\t" + Integer.toHexString(wSkip));
-            System.exit(0);
-        }
         this.bSize = bSize;
         this.token2 = token2;
     }
