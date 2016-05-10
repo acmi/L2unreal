@@ -28,7 +28,6 @@ import org.junit.Test;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -37,15 +36,13 @@ import static org.junit.Assert.*;
 public class BytecodeReadTest {
     @Test
     public void test() {
-        String[] files = new String[]{
-                "/high_five/Editor.u", "/high_five/Engine.u", "/high_five/Interface.u",
-                "/helios/Editor.u", "/helios/Engine.u", "/helios/Interface.u"
-        };
-        for (String file : files) {
-            try (UnrealPackage up = new UnrealPackage(new File(getClass().getResource(file).toURI()), true)) {
+        File[] files = new File("src/test/resources/system")
+                .listFiles((dir, name)->name.endsWith(".u"));
+        for (File file : files) {
+            try (UnrealPackage up = new UnrealPackage(file, true)) {
                 up.getExportTable().stream()
                         .filter(exportEntry -> exportEntry.getFullClassName().equalsIgnoreCase("Core.Struct") ||
-                                exportEntry.getFullClassName().equalsIgnoreCase("Core.State") ||
+                                exportEntry.getFullClassName().equalsIgnoreCase("Core.Flags") ||
                                 exportEntry.getFullClassName().equalsIgnoreCase("Core.Class") ||
                                 exportEntry.getFullClassName().equalsIgnoreCase("Core.Function"))
                         .forEach(entry -> {
@@ -77,7 +74,7 @@ public class BytecodeReadTest {
                             while (readSize < size) {
                                 Token token = input.readObject(Token.class);
 
-                                System.out.println("\t"+String.format("/*0x%04x*/\t%s\t/* %s */", readSize, token, token.toString(context)));
+                                System.out.println("\t" + String.format("/*0x%04x*/\t%s\t/* %s */", readSize, token, token.toString(context)));
 
                                 readSize += token.getSize(input.getContext());
                                 tokens.add(token);
@@ -99,8 +96,6 @@ public class BytecodeReadTest {
                             System.out.println("\t new: " + javax.xml.bind.DatatypeConverter.printHexBinary(newBytecode));
                             assertArrayEquals(originalBytecode, newBytecode);
                         });
-            } catch (URISyntaxException e) {
-                fail(e.toString());
             }
         }
     }
