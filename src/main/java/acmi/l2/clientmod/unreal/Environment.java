@@ -99,8 +99,8 @@ public class Environment {
                 .filter(file -> FilenameUtils.removeExtension(file.getName()).equalsIgnoreCase(name));
     }
 
-    public Stream<UnrealPackage> listPackages() {
-        return listFiles()
+    public Stream<UnrealPackage> listPackages(String name) {
+        return getPackage(name)
                 .map(this::getPackage)
                 .filter(Optional::isPresent)
                 .map(Optional::get);
@@ -108,8 +108,7 @@ public class Environment {
 
     public Optional<UnrealPackage.ExportEntry> getExportEntry(String fullName, Predicate<String> fullClassName) throws UncheckedIOException {
         String pckgName = fullName.substring(0, fullName.indexOf('.'));
-        return listPackages()
-                .filter(p -> p.getPackageName().equalsIgnoreCase(pckgName))
+        return listPackages(pckgName)
                 .map(UnrealPackage::getExportTable)
                 .flatMap(Collection::stream)
                 .filter(e -> e.getObjectFullName().equalsIgnoreCase(fullName))
