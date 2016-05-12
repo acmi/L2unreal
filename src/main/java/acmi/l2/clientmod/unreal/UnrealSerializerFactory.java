@@ -37,9 +37,9 @@ import acmi.l2.clientmod.unreal.core.Struct;
 import java.io.*;
 import java.lang.annotation.Annotation;
 import java.util.*;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.ForkJoinPool;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -53,7 +53,7 @@ public class UnrealSerializerFactory extends ReflectionSerializerFactory<UnrealR
 
     public static String unrealClassesPackage = "acmi.l2.clientmod.unreal";
 
-    private ExecutorService executor = Executors.newCachedThreadPool();
+    private ForkJoinPool forkJoinPool = new ForkJoinPool();
 
     private Map<UnrealPackage.Entry, Object> objects = new HashMap<>();
 
@@ -218,7 +218,7 @@ public class UnrealSerializerFactory extends ReflectionSerializerFactory<UnrealR
 
     private void load(Object obj, UnrealPackage.ExportEntry entry) throws Throwable {
         try {
-            executor.submit(() -> {
+            CompletableFuture.runAsync(() -> {
                 Serializer serializer = forClass(obj.getClass());
                 //noinspection unchecked
                 serializer.readObject(obj, new ObjectInputStream<UnrealRuntimeContext>(
@@ -240,9 +240,8 @@ public class UnrealSerializerFactory extends ReflectionSerializerFactory<UnrealR
                         return obj;
                     }
                 });
-            }).get();
-        } catch (InterruptedException ignore) {
-        } catch (ExecutionException e) {
+            }, forkJoinPool).join();
+        } catch (CompletionException e) {
             throw e.getCause();
         }
     }
