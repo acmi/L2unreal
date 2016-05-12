@@ -27,6 +27,7 @@ import acmi.l2.clientmod.io.ObjectInputStream;
 import acmi.l2.clientmod.io.UnrealPackage;
 import acmi.l2.clientmod.unreal.UnrealException;
 import acmi.l2.clientmod.unreal.UnrealRuntimeContext;
+import acmi.l2.clientmod.unreal.UnrealSerializerFactory;
 import acmi.l2.clientmod.unreal.core.*;
 
 import java.io.ByteArrayInputStream;
@@ -53,7 +54,7 @@ public class PropertiesUtil {
             String name;
             while (!(name = objectInput.getContext().getUnrealPackage().getNameTable().get(objectInput.readCompactInt()).getName()).equals("None")) {
                 if (classTemplate == null)
-                    classTemplate = getFields(objectInput.getContext(), objClass);
+                    classTemplate = getPropertyFields(objectInput.getContext().getSerializer(), objClass).collect(Collectors.toList());
 
                 int info = objectInput.readUnsignedByte();
                 Type propertyType = Type.values()[info & 0b1111];
@@ -212,7 +213,7 @@ public class PropertiesUtil {
     }
 
     public static List<L2Property> readStructBin(ObjectInput<UnrealRuntimeContext> objBuffer, String structName) throws UnrealException, UncheckedIOException {
-        List<Property> properties = getFields(objBuffer.getContext(), structName);
+        List<Property> properties = getPropertyFields(objBuffer.getContext().getSerializer(), structName).collect(Collectors.toList());
 
         switch (structName) {
             case "Core.Object.Vector": {
@@ -275,10 +276,10 @@ public class PropertiesUtil {
                 .orElse(null);
     }
 
-    private static List<Property> getFields(UnrealRuntimeContext context, String structName) {
+    public static Stream<Property> getPropertyFields(UnrealSerializerFactory serializer, String structName) {
         Stream<Property> props = Stream.empty();
         while (structName != null) {
-            Struct struct = context.getSerializer().getStruct(structName)
+            Struct struct = serializer.getStruct(structName)
                     .orElse(new Struct());
             props = Stream.concat(props, StreamSupport.stream(struct.spliterator(), false)
                     .filter(f -> f instanceof Property)
@@ -286,7 +287,7 @@ public class PropertiesUtil {
             structName = struct.entry != null && struct.entry.getObjectSuperClass() != null ?
                     struct.entry.getObjectSuperClass().getObjectFullName() : null;
         }
-        return props.collect(Collectors.toList());
+        return props;
     }
 
     private static boolean match(Class<? extends Property> clazz, Type type) {
