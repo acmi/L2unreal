@@ -53,6 +53,11 @@ public class UnrealSerializerFactory extends ReflectionSerializerFactory<UnrealR
 
     public static String unrealClassesPackage = "acmi.l2.clientmod.unreal";
 
+    public static final Predicate<String> IS_STRUCT = c -> c.equalsIgnoreCase("Core.Struct") ||
+            c.equalsIgnoreCase("Core.Function") ||
+            c.equalsIgnoreCase("Core.State") ||
+            c.equalsIgnoreCase("Core.Class");
+
     private ForkJoinPool forkJoinPool = new ForkJoinPool();
 
     private Map<UnrealPackage.Entry, Object> objects = new HashMap<>();
@@ -128,7 +133,17 @@ public class UnrealSerializerFactory extends ReflectionSerializerFactory<UnrealR
                 return null;
             }
         };
-        objects.put(entry, new acmi.l2.clientmod.unreal.core.Class());
+        objects.put(entry, new acmi.l2.clientmod.unreal.core.Class() {
+            @Override
+            public String getFullName() {
+                return objName;
+            }
+
+            @Override
+            public String getClassFullName() {
+                return objClass;
+            }
+        });
     }
 
     public Object getOrCreateObject(String objName, Predicate<String> objClass) throws UncheckedIOException {
@@ -254,10 +269,7 @@ public class UnrealSerializerFactory extends ReflectionSerializerFactory<UnrealR
 
     public Optional<Struct> getStruct(String name) {
         try {
-            return Optional.ofNullable((Struct) getOrCreateObject(name, c -> c.equalsIgnoreCase("Core.Struct") ||
-                    c.equalsIgnoreCase("Core.Function") ||
-                    c.equalsIgnoreCase("Core.State") ||
-                    c.equalsIgnoreCase("Core.Class")));
+            return Optional.ofNullable((Struct) getOrCreateObject(name, IS_STRUCT));
         } catch (Exception e) {
             log.log(Level.WARNING, e, () -> "");
             return Optional.empty();
@@ -265,10 +277,10 @@ public class UnrealSerializerFactory extends ReflectionSerializerFactory<UnrealR
     }
 
     public String getSuperClass(String clazz) {
-        Optional<Struct> opt = getStruct(clazz);
+        Optional<UnrealPackage.ExportEntry> opt = getExportEntry(clazz, IS_STRUCT);
         if (opt.isPresent())
-            return opt.get().entry.getObjectSuperClass() != null ?
-                    opt.get().entry.getObjectSuperClass().getObjectFullName() : null;
+            return opt.get().getObjectSuperClass() != null ?
+                    opt.get().getObjectSuperClass().getObjectFullName() : null;
         else {
             try {
                 Class<?> javaClass = Class.forName(unrealClassesPackage + "." + unrealClassNameToJavaClassName(clazz));
@@ -294,7 +306,7 @@ public class UnrealSerializerFactory extends ReflectionSerializerFactory<UnrealR
         if (!isSubclassCache.containsKey(k)) {
             child = getSuperClass(child);
 
-            isSubclassCache.put(k, isSubclass(parent, child));
+            isSubclassCache.put(k, child != null && isSubclass(parent, child));
         }
         return isSubclassCache.get(k);
     }

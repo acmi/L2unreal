@@ -53,9 +53,17 @@ public class Object {
             properties.addAll(PropertiesUtil.readProperties(input, this.entry.getFullClassName()));
     }
 
+    public String getFullName() {
+        return entry.getObjectFullName();
+    }
+
+    public String getClassFullName() {
+        return entry.getFullClassName();
+    }
+
     @Override
     public String toString() {
-        return String.format("%s[%s]", entry.getObjectFullName(), getClass().getSimpleName());
+        return String.format("%s[%s]", getFullName(), getClassFullName());
     }
 
     public static class StateFrame {
