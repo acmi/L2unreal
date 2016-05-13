@@ -88,10 +88,7 @@ public class UnrealSerializerFactory extends ReflectionSerializerFactory<UnrealR
 
             UnrealPackage.ExportEntry entry;
             try {
-                entry = packageLocalEntry instanceof UnrealPackage.ExportEntry ?
-                        (UnrealPackage.ExportEntry) packageLocalEntry :
-                        getExportEntry(packageLocalEntry.getObjectFullName(), clazz -> clazz.equalsIgnoreCase(packageLocalEntry.getFullClassName()))
-                                .orElse(null);
+                entry = resolveExportEntry(packageLocalEntry).orElse(null);
                 if (entry != null) {
                     Class<? extends Object> clazz = getClass(entry.getFullClassName());
                     Object obj = clazz.newInstance();
@@ -137,6 +134,15 @@ public class UnrealSerializerFactory extends ReflectionSerializerFactory<UnrealR
     public Object getOrCreateObject(String objName, Predicate<String> objClass) throws UncheckedIOException {
         return getOrCreateObject(getExportEntry(objName, objClass)
                 .orElseThrow(() -> new UnrealException("Entry " + objName + " not found")));
+    }
+
+    public Optional<UnrealPackage.ExportEntry> resolveExportEntry(UnrealPackage.Entry entry) {
+        if (entry == null)
+            return null;
+
+        return entry instanceof UnrealPackage.ExportEntry ?
+                Optional.of((UnrealPackage.ExportEntry) entry) :
+                getExportEntry(entry.getObjectFullName(), clazz -> clazz.equalsIgnoreCase(entry.getFullClassName()));
     }
 
     private Optional<UnrealPackage.ExportEntry> getExportEntry(String objName, Predicate<String> objClass) {
@@ -248,7 +254,7 @@ public class UnrealSerializerFactory extends ReflectionSerializerFactory<UnrealR
 
     public Optional<Struct> getStruct(String name) {
         try {
-            return Optional.of((Struct) getOrCreateObject(name, c -> c.equalsIgnoreCase("Core.Struct") ||
+            return Optional.ofNullable((Struct) getOrCreateObject(name, c -> c.equalsIgnoreCase("Core.Struct") ||
                     c.equalsIgnoreCase("Core.Function") ||
                     c.equalsIgnoreCase("Core.State") ||
                     c.equalsIgnoreCase("Core.Class")));
@@ -258,8 +264,55 @@ public class UnrealSerializerFactory extends ReflectionSerializerFactory<UnrealR
         }
     }
 
-    public Optional<acmi.l2.clientmod.unreal.core.Function> getNativeFunction(int index) {
+    public String getSuperClass(String clazz) {
+        Optional<Struct> opt = getStruct(clazz);
+        if (opt.isPresent())
+            return opt.get().entry.getObjectSuperClass() != null ?
+                    opt.get().entry.getObjectSuperClass().getObjectFullName() : null;
+        else {
+            try {
+                Class<?> javaClass = Class.forName(unrealClassesPackage + "." + unrealClassNameToJavaClassName(clazz));
+                Class<?> javaSuperClass = javaClass.getSuperclass();
+                String javaSuperClassName = javaSuperClass.getName();
+                if (javaSuperClassName.contains(unrealClassesPackage)) {
+                    javaSuperClassName = javaSuperClassName.substring(unrealClassesPackage.length() + 1);
+                    return javaSuperClassName.substring(0, 1).toUpperCase() + javaSuperClassName.substring(1);
+                }
+            } catch (ClassNotFoundException ignore) {
+            }
+        }
         return null;
+    }
+
+    private Map<String, Boolean> isSubclassCache = new HashMap<>();
+
+    public boolean isSubclass(String parent, String child) {
+        if (parent.equalsIgnoreCase(Objects.requireNonNull(child)))
+            return true;
+
+        String k = parent + "@" + child;
+        if (!isSubclassCache.containsKey(k)) {
+            child = getSuperClass(child);
+
+            isSubclassCache.put(k, isSubclass(parent, child));
+        }
+        return isSubclassCache.get(k);
+    }
+
+    public <T extends Struct> List<T> getStructTree(T struct) {
+        List<T> list = new ArrayList<>();
+
+        for (UnrealPackage.ExportEntry entry = struct.entry; entry != null; entry = resolveExportEntry(entry.getObjectSuperClass()).orElse(null)) {
+            list.add((T) getOrCreateObject(entry));
+        }
+
+        Collections.reverse(list);
+
+        return list;
+    }
+
+    public Optional<acmi.l2.clientmod.unreal.core.Function> getNativeFunction(int index) {
+        return null; //TODO
     }
 
     private static class EnvironmentWrapper extends Environment {

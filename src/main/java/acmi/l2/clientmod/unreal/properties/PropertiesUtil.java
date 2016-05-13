@@ -36,7 +36,6 @@ import java.io.UncheckedIOException;
 import java.lang.Class;
 import java.lang.Object;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -57,14 +56,13 @@ public class PropertiesUtil {
                     classTemplate = getPropertyFields(objectInput.getContext().getSerializer(), objClass).collect(Collectors.toList());
 
                 int info = objectInput.readUnsignedByte();
-                Type propertyType = Type.values()[info & 0b1111];
-                int sizeType = (info >> 4) & 0b111;
-                boolean array = info >> 7 == 1;
+                Type propertyType = getPropertyType(info);
+                int sizeType = getPropertySizeType(info);
+                boolean array = isArray(info);
 
-                String structName = propertyType.equals(Type.STRUCT) ?
-                        up.getNameTable().get(objectInput.readCompactInt()).getName() : null;
+                String structName = propertyType == Type.STRUCT ? up.nameReference(objectInput.readCompactInt()) : null;
                 int size = readPropertySize(sizeType, objectInput);
-                int arrayIndex = array && !propertyType.equals(Type.BOOL) ? objectInput.readCompactInt() : 0;
+                int arrayIndex = array && propertyType != Type.BOOL ? objectInput.readCompactInt() : 0;
 
                 byte[] objBytes = new byte[size];
                 objectInput.readFully(objBytes);
@@ -82,12 +80,10 @@ public class PropertiesUtil {
                     properties.add(property);
                 }
 
-                if (structName != null &&
-                        !"Vector".equals(structName) &&
-                        !"Rotator".equals(structName) &&
-                        !"Color".equals(structName)) {
+                Struct struct = null;
+                if (propertyType == Type.STRUCT) {
                     StructProperty structProperty = (StructProperty) property.getTemplate();
-                    structName = structProperty.struct.entry.getObjectFullName();
+                    struct = structProperty.struct;
                 }
                 Property arrayInner = null;
                 if (propertyType.equals(Type.ARRAY)) {
@@ -96,7 +92,7 @@ public class PropertiesUtil {
                 }
 
                 ObjectInput<UnrealRuntimeContext> objBuffer = new ObjectInputStream<>(new ByteArrayInputStream(objBytes), objectInput.getCharset(), objectInput.getSerializerFactory(), objectInput.getContext());
-                property.putAt(arrayIndex, read(objBuffer, propertyType, array, arrayInner, structName));
+                property.putAt(arrayIndex, read(objBuffer, propertyType, array, arrayInner, struct));
             }
         } catch (UnrealException e) {
             throw e;
@@ -107,7 +103,19 @@ public class PropertiesUtil {
         return properties;
     }
 
-    private static int readPropertySize(int sizeType, DataInput dataInput) throws IOException {
+    public static Type getPropertyType(int info) {
+        return Type.values()[info & 0b1111];
+    }
+
+    public static int getPropertySizeType(int info) {
+        return (info >> 4) & 0b111;
+    }
+
+    public static boolean isArray(int info) {
+        return info >> 7 != 0;
+    }
+
+    public static int readPropertySize(int sizeType, DataInput dataInput) throws IOException {
         switch (sizeType) {
             case 0:
                 return 1;
@@ -126,7 +134,7 @@ public class PropertiesUtil {
             case 7:
                 return dataInput.readInt();
             default:
-                throw new IllegalArgumentException();
+                throw new IllegalArgumentException(String.valueOf(sizeType));
         }
     }
 
@@ -138,18 +146,18 @@ public class PropertiesUtil {
         FLOAT,
         OBJECT,
         NAME,
-        DELEGATE,
-        CLASS,
+        _DELEGATE,
+        _CLASS,
         ARRAY,
         STRUCT,
-        VECTOR,
-        ROTATOR,
+        _VECTOR,
+        _ROTATOR,
         STR,
-        MAP,
-        FIXED_ARRAY
+        _MAP,
+        _FIXED_ARRAY
     }
 
-    private static Object read(ObjectInput<UnrealRuntimeContext> objBuffer, Type propertyType, boolean array, Property arrayInner, String structName) throws IOException {
+    public static Object read(ObjectInput<UnrealRuntimeContext> objBuffer, Type propertyType, boolean array, Property arrayInner, Struct struct) throws UncheckedIOException {
         switch (propertyType) {
             case NONE:
                 return null;
@@ -174,11 +182,11 @@ public class PropertiesUtil {
 
                 array = false;
                 arrayInner = null;
-                structName = null;
+                struct = null;
                 propertyType = Type.valueOf(a);
                 if (propertyType == Type.STRUCT) {
                     StructProperty structProperty = (StructProperty) f;
-                    structName = structProperty.struct.entry.getObjectFullName();
+                    struct = structProperty.struct;
                 }
                 if (propertyType == Type.ARRAY) {
                     array = true;
@@ -187,26 +195,25 @@ public class PropertiesUtil {
                 }
 
                 for (int i = 0; i < arraySize; i++) {
-                    arrayList.add(read(objBuffer, propertyType, array, arrayInner, structName));
+                    arrayList.add(read(objBuffer, propertyType, array, arrayInner, struct));
                 }
                 return arrayList;
             case STRUCT:
-                return readStruct(objBuffer, structName);
+                return readStruct(objBuffer, struct);
             case STR:
                 return objBuffer.readLine();
             default:
-                throw new IllegalStateException("Unk type(" + structName + "): " + propertyType);
+                throw new IllegalStateException("Unk type: " + propertyType);
         }
     }
 
-    private static List<L2Property> readStruct(ObjectInput<UnrealRuntimeContext> objBuffer, String structName) throws IOException {
+    public static List<L2Property> readStruct(ObjectInput<UnrealRuntimeContext> objBuffer, Struct struct) throws UncheckedIOException {
+        String structName = struct.entry.getObjectFullName();
         switch (structName) {
-            case "Vector":
-                return readStructBin(objBuffer, "Core.Object.Vector");
-            case "Rotator":
-                return readStructBin(objBuffer, "Core.Object.Rotator");
-            case "Color":
-                return readStructBin(objBuffer, "Core.Object.Color");
+            case "Core.Object.Vector":
+            case "Core.Object.Rotator":
+            case "Core.Object.Color":
+                return readStructBin(objBuffer, structName);
             default:
                 return readProperties(objBuffer, structName);
         }
@@ -215,58 +222,10 @@ public class PropertiesUtil {
     public static List<L2Property> readStructBin(ObjectInput<UnrealRuntimeContext> objBuffer, String structName) throws UnrealException, UncheckedIOException {
         List<Property> properties = getPropertyFields(objBuffer.getContext().getSerializer(), structName).collect(Collectors.toList());
 
-        switch (structName) {
-            case "Core.Object.Vector": {
-                L2Property x = new L2Property(properties.get(0));
-                x.putAt(0, objBuffer.readFloat());
-                L2Property y = new L2Property(properties.get(1));
-                y.putAt(0, objBuffer.readFloat());
-                L2Property z = new L2Property(properties.get(2));
-                z.putAt(0, objBuffer.readFloat());
-                return Arrays.asList(x, y, z);
-            }
-            case "Core.Object.Rotator": {
-                L2Property pitch = new L2Property(properties.get(0));
-                pitch.putAt(0, objBuffer.readInt());
-                L2Property yaw = new L2Property(properties.get(1));
-                yaw.putAt(0, objBuffer.readInt());
-                L2Property roll = new L2Property(properties.get(2));
-                roll.putAt(0, objBuffer.readInt());
-                return Arrays.asList(pitch, yaw, roll);
-            }
-            case "Core.Object.Color": {
-                L2Property b = new L2Property(properties.get(0));
-                b.putAt(0, objBuffer.readUnsignedByte());
-                L2Property g = new L2Property(properties.get(1));
-                g.putAt(0, objBuffer.readUnsignedByte());
-                L2Property r = new L2Property(properties.get(2));
-                r.putAt(0, objBuffer.readUnsignedByte());
-                L2Property a = new L2Property(properties.get(3));
-                a.putAt(0, objBuffer.readUnsignedByte());
-                return Arrays.asList(b, g, r, a);
-            }
-            case "Fire.FireTexture.Spark": {
-                L2Property type = new L2Property(properties.get(0));
-                type.putAt(0, objBuffer.readUnsignedByte());
-                L2Property heat = new L2Property(properties.get(1));
-                heat.putAt(0, objBuffer.readUnsignedByte());
-                L2Property x = new L2Property(properties.get(2));
-                x.putAt(0, objBuffer.readUnsignedByte());
-                L2Property y = new L2Property(properties.get(3));
-                y.putAt(0, objBuffer.readUnsignedByte());
-                L2Property byteA = new L2Property(properties.get(4));
-                byteA.putAt(0, objBuffer.readUnsignedByte());
-                L2Property byteB = new L2Property(properties.get(5));
-                byteB.putAt(0, objBuffer.readUnsignedByte());
-                L2Property byteC = new L2Property(properties.get(6));
-                byteC.putAt(0, objBuffer.readUnsignedByte());
-                L2Property byteD = new L2Property(properties.get(7));
-                byteD.putAt(0, objBuffer.readUnsignedByte());
-                return Arrays.asList(type, heat, x, y, byteA, byteB, byteC, byteD);
-            }
-            default:
-                throw new IllegalStateException("Not implemented: " + structName); //TODO
-        }
+        return properties.stream()
+                .map(L2Property::new)
+                .peek(l2Property -> l2Property.putAt(0, read(objBuffer, getType(l2Property.getTemplate()), false, null, null)))
+                .collect(Collectors.toList());
     }
 
     public static L2Property getAt(List<L2Property> properties, String name) {
@@ -304,9 +263,9 @@ public class PropertiesUtil {
                 return ObjectProperty.class.isAssignableFrom(clazz);
             case NAME:
                 return NameProperty.class.isAssignableFrom(clazz);
-            case DELEGATE:
+            case _DELEGATE:
                 return DelegateProperty.class.isAssignableFrom(clazz);
-            case CLASS:
+            case _CLASS:
                 return ClassProperty.class.isAssignableFrom(clazz);
             case ARRAY:
                 return ArrayProperty.class.isAssignableFrom(clazz);
@@ -317,5 +276,27 @@ public class PropertiesUtil {
             default:
                 throw new IllegalStateException();
         }
+    }
+
+    public static Type getType(Property property) {
+        if (property instanceof ByteProperty)
+            return Type.BYTE;
+        else if (property instanceof IntProperty)
+            return Type.INT;
+        else if (property instanceof BoolProperty)
+            return Type.BOOL;
+        else if (property instanceof FloatProperty)
+            return Type.FLOAT;
+        else if (property instanceof ObjectProperty)
+            return Type.OBJECT;
+        else if (property instanceof NameProperty)
+            return Type.NAME;
+        else if (property instanceof ArrayProperty)
+            return Type.ARRAY;
+        else if (property instanceof StructProperty)
+            return Type.STRUCT;
+        else if (property instanceof StrProperty)
+            return Type.STR;
+        throw new IllegalStateException();
     }
 }
