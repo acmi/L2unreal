@@ -33,6 +33,10 @@ import acmi.l2.clientmod.unreal.bytecode.TokenSerializerFactory;
 import acmi.l2.clientmod.unreal.bytecode.token.Token;
 import acmi.l2.clientmod.unreal.core.Object;
 import acmi.l2.clientmod.unreal.core.Struct;
+import acmi.l2.clientmod.unreal.properties.PropertiesUtil;
+import javafx.beans.InvalidationListener;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableSet;
 
 import java.io.*;
 import java.lang.annotation.Annotation;
@@ -40,10 +44,8 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ForkJoinPool;
-import java.util.function.BiConsumer;
-import java.util.function.Function;
-import java.util.function.Predicate;
-import java.util.function.Supplier;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
@@ -61,6 +63,7 @@ public class UnrealSerializerFactory extends ReflectionSerializerFactory<UnrealR
     private ForkJoinPool forkJoinPool = new ForkJoinPool();
 
     private Map<UnrealPackage.Entry, Object> objects = new HashMap<>();
+    private ObservableSet<String> loaded = FXCollections.observableSet(new HashSet<>());
 
     private Environment environment;
 
@@ -239,29 +242,73 @@ public class UnrealSerializerFactory extends ReflectionSerializerFactory<UnrealR
 
     private void load(Object obj, UnrealPackage.ExportEntry entry) throws Throwable {
         try {
+            ObjectInput<UnrealRuntimeContext> input = new ObjectInputStream<UnrealRuntimeContext>(
+                    new ByteArrayInputStream(entry.getObjectRawDataExternally()),
+                    entry.getUnrealPackage().getFile().getCharset(),
+                    entry.getOffset(),
+                    this,
+                    new UnrealRuntimeContext(entry, this)
+            ) {
+                @Override
+                public java.lang.Object readObject(Class clazz) throws UncheckedIOException {
+                    if (getSerializerFactory() == null)
+                        throw new IllegalStateException("SerializerFactory is null");
+
+                    Serializer serializer = getSerializerFactory().forClass(clazz);
+                    java.lang.Object obj = serializer.instantiate(this);
+                    if (!(obj instanceof acmi.l2.clientmod.unreal.core.Object))
+                        throw new RuntimeException("USE input.getSerializerFactory().forClass(class).readObject(object, input);");
+                    return obj;
+                }
+            };
+
             CompletableFuture.runAsync(() -> {
                 Serializer serializer = forClass(obj.getClass());
-                //noinspection unchecked
-                serializer.readObject(obj, new ObjectInputStream<UnrealRuntimeContext>(
-                        new ByteArrayInputStream(entry.getObjectRawDataExternally()),
-                        entry.getUnrealPackage().getFile().getCharset(),
-                        entry.getOffset(),
-                        this,
-                        new UnrealRuntimeContext(entry, this)
-                ) {
-                    @Override
-                    public java.lang.Object readObject(Class clazz) throws UncheckedIOException {
-                        if (getSerializerFactory() == null)
-                            throw new IllegalStateException("IOFactory is null");
-
-                        Serializer serializer = getSerializerFactory().forClass(clazz);
-                        java.lang.Object obj = serializer.instantiate(this);
-                        if (!(obj instanceof acmi.l2.clientmod.unreal.core.Object))
-                            throw new RuntimeException("USE input.getSerializerFactory().forClass(class).readObject(object, input);");
-                        return obj;
-                    }
-                });
+                serializer.readObject(obj, input);
             }, forkJoinPool).join();
+
+            if (entry.getFullClassName().equalsIgnoreCase("Core.Class")) {
+                if (entry.getObjectSuperClass() != null) {
+                    String superClass = entry.getObjectSuperClass().getObjectFullName();
+
+                    if (loaded.contains(superClass)) {
+                        obj.properties.addAll(PropertiesUtil.readProperties(input, obj.getFullName()));
+                        loaded.add(entry.getObjectFullName());
+                    } else {
+                        AtomicInteger ai = new AtomicInteger(0);
+                        Consumer<InvalidationListener> c = il -> {
+                            if (loaded.contains(superClass) && ai.getAndIncrement() == 0) {
+                                loaded.removeListener(il);
+                                obj.properties.addAll(PropertiesUtil.readProperties(input, obj.getFullName()));
+                                loaded.add(entry.getObjectFullName());
+                            }
+                        };
+                        InvalidationListener il = new InvalidationListener() {
+                            @Override
+                            public void invalidated(javafx.beans.Observable observable) {
+                                c.accept(this);
+                            }
+                        };
+                        loaded.addListener(il);
+                        c.accept(il);
+                    }
+                } else {
+                    loaded.add(entry.getObjectFullName());
+                }
+            }
+
+            if (!(obj instanceof acmi.l2.clientmod.unreal.core.Class)) {
+                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                try {
+                    while (true)
+                        baos.write(input.readUnsignedByte());
+                } catch (UncheckedIOException ignore) {
+                }
+
+                obj.unreadBytes = baos.toByteArray();
+                if (obj.unreadBytes.length > 0)
+                    log.warning(() -> obj + " " + obj.unreadBytes.length + " bytes ignored");
+            }
         } catch (CompletionException e) {
             throw e.getCause();
         }

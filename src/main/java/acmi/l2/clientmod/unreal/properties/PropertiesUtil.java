@@ -52,8 +52,9 @@ public class PropertiesUtil {
         try {
             String name;
             while (!(name = objectInput.getContext().getUnrealPackage().getNameTable().get(objectInput.readCompactInt()).getName()).equals("None")) {
-                if (classTemplate == null)
+                if (classTemplate == null) {
                     classTemplate = getPropertyFields(objectInput.getContext().getSerializer(), objClass).collect(Collectors.toList());
+                }
 
                 int info = objectInput.readUnsignedByte();
                 Type propertyType = getPropertyType(info);
