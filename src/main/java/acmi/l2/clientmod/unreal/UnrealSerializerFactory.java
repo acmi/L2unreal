@@ -153,7 +153,7 @@ public class UnrealSerializerFactory extends ReflectionSerializerFactory<UnrealR
 
     public Optional<UnrealPackage.ExportEntry> resolveExportEntry(UnrealPackage.Entry entry) {
         if (entry == null)
-            return null;
+            return Optional.empty();
 
         return entry instanceof UnrealPackage.ExportEntry ?
                 Optional.of((UnrealPackage.ExportEntry) entry) :
