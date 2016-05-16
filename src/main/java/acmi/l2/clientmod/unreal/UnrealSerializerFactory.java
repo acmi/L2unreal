@@ -92,7 +92,7 @@ public class UnrealSerializerFactory extends ReflectionSerializerFactory<UnrealR
             return null;
 
         if (!objects.containsKey(packageLocalEntry)) {
-            log.fine(() -> String.format("Load %s", packageLocalEntry));
+            log.fine(() -> String.format("Loading %s", packageLocalEntry));
 
             UnrealPackage.ExportEntry entry;
             try {
@@ -171,11 +171,11 @@ public class UnrealSerializerFactory extends ReflectionSerializerFactory<UnrealR
         Class<?> clazz = null;
         try {
             String javaClassName = unrealClassesPackage + "." + unrealClassNameToJavaClassName(className);
-            log.fine(() -> String.format("unreal[%s]->jvm[%s]", className, javaClassName));
+            log.finer(() -> String.format("unreal[%s]->jvm[%s]", className, javaClassName));
             clazz = Class.forName(javaClassName);
             return clazz.asSubclass(Object.class);
         } catch (ClassNotFoundException e) {
-            log.fine(() -> String.format("Class %s not implemented in java", className));
+            log.finer(() -> String.format("Class %s not implemented in java", className));
         } catch (ClassCastException e) {
             Class<?> clazzLocal = clazz;
             log.warning(() -> String.format("%s is not subclass of %s", clazzLocal, Object.class));
@@ -268,19 +268,22 @@ public class UnrealSerializerFactory extends ReflectionSerializerFactory<UnrealR
             }, forkJoinPool).join();
 
             if (entry.getFullClassName().equalsIgnoreCase("Core.Class")) {
+                Runnable loadProps = () -> {
+                    obj.properties.addAll(PropertiesUtil.readProperties(input, obj.getFullName()));
+                    loaded.add(entry.getObjectFullName());
+                    log.fine(() -> entry.getObjectFullName() + " properties loaded");
+                };
                 if (entry.getObjectSuperClass() != null) {
                     String superClass = entry.getObjectSuperClass().getObjectFullName();
 
                     if (loaded.contains(superClass)) {
-                        obj.properties.addAll(PropertiesUtil.readProperties(input, obj.getFullName()));
-                        loaded.add(entry.getObjectFullName());
+                        loadProps.run();
                     } else {
                         AtomicInteger ai = new AtomicInteger(0);
                         Consumer<InvalidationListener> c = il -> {
                             if (loaded.contains(superClass) && ai.getAndIncrement() == 0) {
                                 loaded.removeListener(il);
-                                obj.properties.addAll(PropertiesUtil.readProperties(input, obj.getFullName()));
-                                loaded.add(entry.getObjectFullName());
+                                loadProps.run();
                             }
                         };
                         InvalidationListener il = new InvalidationListener() {
@@ -293,7 +296,7 @@ public class UnrealSerializerFactory extends ReflectionSerializerFactory<UnrealR
                         c.accept(il);
                     }
                 } else {
-                    loaded.add(entry.getObjectFullName());
+                    loadProps.run();
                 }
             }
 
@@ -309,6 +312,8 @@ public class UnrealSerializerFactory extends ReflectionSerializerFactory<UnrealR
                 if (obj.unreadBytes.length > 0)
                     log.warning(() -> obj + " " + obj.unreadBytes.length + " bytes ignored");
             }
+
+            log.fine(() -> entry.getObjectFullName() + " loaded");
         } catch (CompletionException e) {
             throw e.getCause();
         }
