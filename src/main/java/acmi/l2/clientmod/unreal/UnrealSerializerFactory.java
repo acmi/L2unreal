@@ -63,6 +63,7 @@ public class UnrealSerializerFactory extends ReflectionSerializerFactory<UnrealR
     private ForkJoinPool forkJoinPool = new ForkJoinPool();
 
     private Map<UnrealPackage.Entry, Object> objects = new HashMap<>();
+    private Map<Integer, acmi.l2.clientmod.unreal.core.Function> nativeFunctions = new HashMap<>();
     private ObservableSet<String> loaded = FXCollections.observableSet(new HashSet<>());
 
     private Environment environment;
@@ -267,6 +268,12 @@ public class UnrealSerializerFactory extends ReflectionSerializerFactory<UnrealR
                 serializer.readObject(obj, input);
             }, forkJoinPool).join();
 
+            if (obj instanceof acmi.l2.clientmod.unreal.core.Function) {
+                acmi.l2.clientmod.unreal.core.Function func = (acmi.l2.clientmod.unreal.core.Function) obj;
+                if (func.nativeIndex > 0)
+                    nativeFunctions.put(func.nativeIndex, func);
+            }
+
             if (entry.getFullClassName().equalsIgnoreCase("Core.Class")) {
                 Runnable loadProps = () -> {
                     obj.properties.addAll(PropertiesUtil.readProperties(input, obj.getFullName()));
@@ -376,7 +383,7 @@ public class UnrealSerializerFactory extends ReflectionSerializerFactory<UnrealR
     }
 
     public Optional<acmi.l2.clientmod.unreal.core.Function> getNativeFunction(int index) {
-        return null; //TODO
+        return Optional.ofNullable(nativeFunctions.get(index));
     }
 
     private static class EnvironmentWrapper extends Environment {
