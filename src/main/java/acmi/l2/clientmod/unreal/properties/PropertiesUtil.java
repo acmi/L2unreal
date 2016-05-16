@@ -211,7 +211,7 @@ public class PropertiesUtil {
                 }
                 if (i > 0)
                     output.writeByte(i);
-                output.write(bytes);
+                output.writeBytes(bytes);
             }
         }
         output.writeCompactInt(up.nameReference("None"));
