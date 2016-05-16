@@ -21,12 +21,13 @@
  */
 package acmi.l2.clientmod.unreal.core;
 
-import acmi.l2.clientmod.io.ObjectInput;
+import acmi.l2.clientmod.io.DataInput;
+import acmi.l2.clientmod.io.DataOutput;
 import acmi.l2.clientmod.io.annotation.ReadMethod;
 import acmi.l2.clientmod.io.annotation.UByte;
 import acmi.l2.clientmod.io.annotation.UShort;
+import acmi.l2.clientmod.io.annotation.WriteMethod;
 
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.stream.Collectors;
@@ -41,11 +42,20 @@ public class Function extends Struct {
     public int replicationOffset;
 
     @ReadMethod
-    public void read(ObjectInput input) throws IOException {
+    public void readFunction(DataInput input) {
         nativeIndex = input.readUnsignedShort();
         operatorPrecedence = input.readUnsignedByte();
         functionFlags = input.readInt();
         replicationOffset = (functionFlags & Flag.NET.getMask()) != 0 ? input.readUnsignedShort() : 0;
+    }
+
+    @WriteMethod
+    public final void writeFunction(DataOutput output) {
+        output.writeShort(nativeIndex);
+        output.writeByte(operatorPrecedence);
+        output.writeInt(functionFlags);
+        if ((functionFlags & Flag.NET.getMask()) != 0)
+            output.writeShort(replicationOffset);
     }
 
     public enum Flag {

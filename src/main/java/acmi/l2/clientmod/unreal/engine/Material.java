@@ -1,80 +1,108 @@
 package acmi.l2.clientmod.unreal.engine;
 
-import acmi.l2.clientmod.io.DataInput;
-import acmi.l2.clientmod.io.ObjectInput;
+import acmi.l2.clientmod.io.*;
 import acmi.l2.clientmod.io.annotation.ReadMethod;
+import acmi.l2.clientmod.io.annotation.WriteMethod;
 import acmi.l2.clientmod.unreal.UnrealPackageContext;
 import acmi.l2.clientmod.unreal.core.Object;
 
+import java.io.ByteArrayOutputStream;
 import java.io.UncheckedIOException;
 
 public class Material extends Object {
+    public byte[] unk;
+
     @ReadMethod
     public final void readMaterial(ObjectInput<UnrealPackageContext> input) {
-        readUnk(input, input.getContext().getUnrealPackage().getVersion(), input.getContext().getUnrealPackage().getLicense());
+        unk = readUnk(input, input.getContext().getUnrealPackage().getVersion(), input.getContext().getUnrealPackage().getLicense());
     }
 
-    public static void readUnk(DataInput obj, int version, int licensee) throws UncheckedIOException {
-        if (licensee <= 10) {
+    @WriteMethod
+    public final void write(ObjectOutput<UnrealPackageContext> output) {
+        output.writeBytes(unk);
+    }
+
+    public byte[] readUnk(DataInput input, int version, int license) throws UncheckedIOException {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        DataOutput output = new DataOutputStream(baos, input.getCharset());
+
+        if (license <= 10) {
             //???
-        } else if (licensee <= 28) {
+        } else if (license <= 28) {
             //c0-ct0
-            obj.readInt();
-        } else if (licensee <= 32) {
+            output.writeInt(input.readInt());
+        } else if (license <= 32) {
             //???
-        } else if (licensee <= 35) {
+        } else if (license <= 35) {
             //ct1-ct22
-            obj.skip(1067);
+            byte[] unk = new byte[1067];
+            input.readFully(unk);
+            output.writeBytes(unk);
             for (int i = 0; i < 16; i++)
-                obj.readLine();
-            obj.readLine();
-            obj.readInt();
-        } else if (licensee == 36) {
+                output.writeLine(input.readLine());
+            output.writeLine(input.readLine());
+            output.writeInt(input.readInt());
+        } else if (license == 36) {
             //ct22
-            obj.skip(1058);
+            byte[] unk = new byte[1058];
+            input.readFully(unk);
+            output.writeBytes(unk);
             for (int i = 0; i < 16; i++)
-                obj.readLine();
-            obj.readLine();
-            obj.readInt();
-        } else if (licensee <= 39) {
+                output.writeLine(input.readLine());
+            output.writeLine(input.readLine());
+            output.writeInt(input.readInt());
+        } else if (license <= 39) {
             //Epeisodion
             if (version == 129) {
-                obj.skip(92);
-                int stringCount = obj.readCompactInt();
+                byte[] unk = new byte[92];
+                input.readFully(unk);
+                output.writeBytes(unk);
+                int stringCount = input.readCompactInt();
+                output.writeCompactInt(stringCount);
                 for (int i = 0; i < stringCount; i++) {
-                    obj.readLine();
-                    int addStringCount = obj.readUnsignedByte();
+                    output.writeLine(input.readLine());
+                    int addStringCount = input.readUnsignedByte();
+                    output.writeByte(addStringCount);
                     for (int j = 0; j < addStringCount; j++)
-                        obj.readLine();
+                        output.writeLine(input.readLine());
                 }
-                obj.readLine();
-                obj.readInt();
-                return;
+                output.writeLine(input.readLine());
+                output.writeInt(input.readInt());
+            } else {
+                //ct23-Lindvior
+                byte[] unk = new byte[36];
+                input.readFully(unk);
+                output.writeBytes(unk);
+                int stringCount = input.readCompactInt();
+                output.writeCompactInt(stringCount);
+                for (int i = 0; i < stringCount; i++) {
+                    output.writeLine(input.readLine());
+                    int addStringCount = input.readUnsignedByte();
+                    output.writeByte(addStringCount);
+                    for (int j = 0; j < addStringCount; j++)
+                        output.writeLine(input.readLine());
+                }
+                output.writeLine(input.readLine());
+                output.writeInt(input.readInt());
             }
-
-            //ct23-Lindvior
-            obj.skip(36);
-            int stringCount = obj.readCompactInt();
-            for (int i = 0; i < stringCount; i++) {
-                obj.readLine();
-                int addStringCount = obj.readUnsignedByte();
-                for (int j = 0; j < addStringCount; j++)
-                    obj.readLine();
-            }
-            obj.readLine();
-            obj.readInt();
         } else {
             //Ertheia+
-            obj.skip(92);
-            int stringCount = obj.readCompactInt();
+            byte[] unk = new byte[92];
+            input.readFully(unk);
+            output.writeBytes(unk);
+            int stringCount = input.readCompactInt();
+            output.writeCompactInt(stringCount);
             for (int i = 0; i < stringCount; i++) {
-                obj.readLine();
-                int addStringCount = obj.readUnsignedByte();
+                output.writeLine(input.readLine());
+                int addStringCount = input.readUnsignedByte();
+                output.writeByte(addStringCount);
                 for (int j = 0; j < addStringCount; j++)
-                    obj.readLine();
+                    output.writeLine(input.readLine());
             }
-            obj.readLine();
-            obj.readInt();
+            output.writeLine(input.readLine());
+            output.writeInt(input.readInt());
         }
+
+        return baos.toByteArray();
     }
 }

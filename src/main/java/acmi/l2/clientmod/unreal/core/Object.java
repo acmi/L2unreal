@@ -22,9 +22,11 @@
 package acmi.l2.clientmod.unreal.core;
 
 import acmi.l2.clientmod.io.ObjectInput;
+import acmi.l2.clientmod.io.ObjectOutput;
 import acmi.l2.clientmod.io.UnrealPackage;
 import acmi.l2.clientmod.io.annotation.Compact;
 import acmi.l2.clientmod.io.annotation.ReadMethod;
+import acmi.l2.clientmod.io.annotation.WriteMethod;
 import acmi.l2.clientmod.unreal.UnrealRuntimeContext;
 import acmi.l2.clientmod.unreal.properties.L2Property;
 import acmi.l2.clientmod.unreal.properties.PropertiesUtil;
@@ -36,7 +38,8 @@ import static acmi.l2.clientmod.io.UnrealPackage.ObjectFlag.HasStack;
 import static acmi.l2.clientmod.io.UnrealPackage.ObjectFlag.getFlags;
 
 public class Object {
-    public UnrealPackage.ExportEntry entry;
+    public transient UnrealPackage.ExportEntry entry;
+
     public StateFrame stateFrame;
     public List<L2Property> properties = new ArrayList<>();
 
@@ -53,6 +56,17 @@ public class Object {
 
         if (!(this instanceof Class)) {
             properties.addAll(PropertiesUtil.readProperties(input, this.entry.getFullClassName()));
+        }
+    }
+
+    @WriteMethod
+    public final void writeObject(ObjectOutput<UnrealRuntimeContext> output) {
+        if (getFlags(output.getContext().getEntry().getObjectFlags()).contains(HasStack)) {
+            output.getSerializerFactory().forClass(StateFrame.class).writeObject(stateFrame, output);
+        }
+
+        if (!(this instanceof Class)) {
+            PropertiesUtil.writeProperties(output, properties);
         }
     }
 

@@ -23,14 +23,7 @@ package acmi.l2.clientmod.unreal.core;
 
 import acmi.l2.clientmod.unreal.annotation.NameRef;
 
-import java.util.Arrays;
-
 public class Enum extends Field {
     @NameRef
     public String[] values;
-
-    @Override
-    public String toString() {
-        return "Enum" + Arrays.toString(values);
-    }
 }

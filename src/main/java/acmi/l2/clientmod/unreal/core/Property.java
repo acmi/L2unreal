@@ -22,12 +22,13 @@
 package acmi.l2.clientmod.unreal.core;
 
 import acmi.l2.clientmod.io.ObjectInput;
+import acmi.l2.clientmod.io.ObjectOutput;
 import acmi.l2.clientmod.io.annotation.ReadMethod;
 import acmi.l2.clientmod.io.annotation.UShort;
+import acmi.l2.clientmod.io.annotation.WriteMethod;
 import acmi.l2.clientmod.unreal.UnrealRuntimeContext;
 import acmi.l2.clientmod.unreal.annotation.NameRef;
 
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.stream.Collectors;
@@ -44,12 +45,22 @@ public class Property extends Field {
     public int replicationOffset;
 
     @ReadMethod
-    public final void readProperty(ObjectInput<UnrealRuntimeContext> input) throws IOException {
+    public final void readProperty(ObjectInput<UnrealRuntimeContext> input) {
         arrayDimension = input.readUnsignedShort();
         elementSize = input.readUnsignedShort();
         propertyFlags = input.readInt();
         category = input.getContext().getUnrealPackage().nameReference(input.readCompactInt());
-        replicationOffset = (propertyFlags & 0x20) != 0 ? input.readUnsignedShort() : 0;
+        replicationOffset = (propertyFlags & CPF.Net.getMask()) != 0 ? input.readUnsignedShort() : 0;
+    }
+
+    @WriteMethod
+    public final void writeProperty(ObjectOutput<UnrealRuntimeContext> output) {
+        output.writeShort(arrayDimension);
+        output.writeShort(elementSize);
+        output.writeInt(propertyFlags);
+        output.writeCompactInt(output.getContext().getUnrealPackage().nameReference(category));
+        if ((propertyFlags & CPF.Net.getMask()) != 0)
+            output.writeShort(replicationOffset);
     }
 
     public enum CPF {
