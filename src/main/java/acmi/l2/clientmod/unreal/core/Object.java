@@ -40,6 +40,8 @@ public class Object {
     public StateFrame stateFrame;
     public List<L2Property> properties = new ArrayList<>();
 
+    public transient byte[] unreadBytes;
+
     @ReadMethod
     public final void readObject(ObjectInput<UnrealRuntimeContext> input) {
         entry = input.getContext().getEntry();
@@ -49,8 +51,9 @@ public class Object {
             input.getSerializerFactory().forClass(StateFrame.class).readObject(stateFrame, input);
         }
 
-        if (!(this instanceof Class))
+        if (!(this instanceof Class)) {
             properties.addAll(PropertiesUtil.readProperties(input, this.entry.getFullClassName()));
+        }
     }
 
     public String getFullName() {
