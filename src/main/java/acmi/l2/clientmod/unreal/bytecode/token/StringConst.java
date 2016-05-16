@@ -21,7 +21,7 @@
  */
 package acmi.l2.clientmod.unreal.bytecode.token;
 
-import acmi.l2.clientmod.unreal.UnrealPackageContext;
+import acmi.l2.clientmod.unreal.UnrealRuntimeContext;
 import org.apache.commons.lang3.StringEscapeUtils;
 
 public class StringConst extends Token {
@@ -49,7 +49,7 @@ public class StringConst extends Token {
     }
 
     @Override
-    public String toString(UnrealPackageContext context) {
+    public String toString(UnrealRuntimeContext context) {
         return "\"" + StringEscapeUtils.escapeJava(value) + "\"";
     }
 }

@@ -22,7 +22,7 @@
 package acmi.l2.clientmod.unreal.bytecode.token;
 
 import acmi.l2.clientmod.io.annotation.Compact;
-import acmi.l2.clientmod.unreal.UnrealPackageContext;
+import acmi.l2.clientmod.unreal.UnrealRuntimeContext;
 import acmi.l2.clientmod.unreal.annotation.ObjectRef;
 
 public class Metacast extends Token {
@@ -55,7 +55,7 @@ public class Metacast extends Token {
     }
 
     @Override
-    public String toString(UnrealPackageContext context) {
+    public String toString(UnrealRuntimeContext context) {
         return "class<" + context.getUnrealPackage().objectReference(classRef).getObjectName().getName() + ">(" + value.toString(context) + ")";
     }
 }

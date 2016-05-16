@@ -27,7 +27,7 @@ import acmi.l2.clientmod.io.annotation.Compact;
 import acmi.l2.clientmod.io.annotation.ReadMethod;
 import acmi.l2.clientmod.io.annotation.UShort;
 import acmi.l2.clientmod.io.annotation.WriteMethod;
-import acmi.l2.clientmod.unreal.UnrealPackageContext;
+import acmi.l2.clientmod.unreal.UnrealRuntimeContext;
 import acmi.l2.clientmod.unreal.annotation.NameRef;
 import acmi.l2.clientmod.unreal.annotation.Offset;
 import acmi.l2.clientmod.unreal.bytecode.BytecodeContext;
@@ -127,7 +127,7 @@ public class LabelTable extends Token {
     }
 
     @Override
-    public String toString(UnrealPackageContext context) {
+    public String toString(UnrealRuntimeContext context) {
         return "";
     }
 }

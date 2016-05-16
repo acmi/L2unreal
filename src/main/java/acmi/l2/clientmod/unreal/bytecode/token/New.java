@@ -21,7 +21,7 @@
  */
 package acmi.l2.clientmod.unreal.bytecode.token;
 
-import acmi.l2.clientmod.unreal.UnrealPackageContext;
+import acmi.l2.clientmod.unreal.UnrealRuntimeContext;
 
 public class New extends Token {
     public static final int OPCODE = 0x11;
@@ -57,7 +57,7 @@ public class New extends Token {
     }
 
     @Override
-    public String toString(UnrealPackageContext context) {
+    public String toString(UnrealRuntimeContext context) {
         return "New(" + outer.toString(context) + "," + name.toString(context) + "," + flags.toString(context) + ") " + clazz.toString(context);
     }
 }

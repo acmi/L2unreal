@@ -21,7 +21,7 @@
  */
 package acmi.l2.clientmod.unreal.bytecode.token;
 
-import acmi.l2.clientmod.unreal.UnrealPackageContext;
+import acmi.l2.clientmod.unreal.UnrealRuntimeContext;
 
 public class NoObject extends Token {
     public static final int OPCODE = 0x2a;
@@ -40,7 +40,7 @@ public class NoObject extends Token {
     }
 
     @Override
-    public String toString(UnrealPackageContext context) {
-        return "none";
+    public String toString(UnrealRuntimeContext context) {
+        return "None";
     }
 }

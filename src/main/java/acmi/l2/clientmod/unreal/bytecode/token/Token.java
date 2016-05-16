@@ -26,7 +26,7 @@ import acmi.l2.clientmod.io.ObjectOutput;
 import acmi.l2.clientmod.io.annotation.UByte;
 import acmi.l2.clientmod.io.annotation.UShort;
 import acmi.l2.clientmod.io.annotation.WriteMethod;
-import acmi.l2.clientmod.unreal.UnrealPackageContext;
+import acmi.l2.clientmod.unreal.UnrealRuntimeContext;
 import acmi.l2.clientmod.unreal.bytecode.BytecodeContext;
 import acmi.l2.clientmod.unreal.bytecode.token.annotation.FunctionParams;
 
@@ -53,9 +53,7 @@ public abstract class Token {
         writeOpcode(output, getOpcode());
     }
 
-    public String toString(UnrealPackageContext context) {
-        return toString();
-    }
+    public abstract String toString(UnrealRuntimeContext context);
 
     private static Map<Class<? extends Token>, Sizer> sizers = new HashMap<>();
 

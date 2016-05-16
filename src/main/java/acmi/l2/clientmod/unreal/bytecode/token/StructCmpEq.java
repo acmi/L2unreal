@@ -22,7 +22,7 @@
 package acmi.l2.clientmod.unreal.bytecode.token;
 
 import acmi.l2.clientmod.io.annotation.Compact;
-import acmi.l2.clientmod.unreal.UnrealPackageContext;
+import acmi.l2.clientmod.unreal.UnrealRuntimeContext;
 import acmi.l2.clientmod.unreal.annotation.ObjectRef;
 
 public class StructCmpEq extends Token {
@@ -58,7 +58,7 @@ public class StructCmpEq extends Token {
     }
 
     @Override
-    public String toString(UnrealPackageContext context) {
+    public String toString(UnrealRuntimeContext context) {
         return left.toString(context) + " == " + right.toString(context);
     }
 }

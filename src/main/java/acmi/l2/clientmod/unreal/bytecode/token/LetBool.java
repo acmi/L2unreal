@@ -21,7 +21,7 @@
  */
 package acmi.l2.clientmod.unreal.bytecode.token;
 
-import acmi.l2.clientmod.unreal.UnrealPackageContext;
+import acmi.l2.clientmod.unreal.UnrealRuntimeContext;
 
 public class LetBool extends Token {
     public static final int OPCODE = 0x14;
@@ -51,7 +51,7 @@ public class LetBool extends Token {
     }
 
     @Override
-    public String toString(UnrealPackageContext context) {
+    public String toString(UnrealRuntimeContext context) {
         return left.toString(context) + " = " + right.toString(context);
     }
 }

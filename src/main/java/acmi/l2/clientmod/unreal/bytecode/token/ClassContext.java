@@ -23,7 +23,7 @@ package acmi.l2.clientmod.unreal.bytecode.token;
 
 import acmi.l2.clientmod.io.annotation.UByte;
 import acmi.l2.clientmod.io.annotation.UShort;
-import acmi.l2.clientmod.unreal.UnrealPackageContext;
+import acmi.l2.clientmod.unreal.UnrealRuntimeContext;
 
 public class ClassContext extends Token {
     public static final int OPCODE = 0x12;
@@ -61,7 +61,7 @@ public class ClassContext extends Token {
     }
 
     @Override
-    public String toString(UnrealPackageContext context) {
+    public String toString(UnrealRuntimeContext context) {
         return token1.toString(context) + "." + token2.toString(context);
     }
 }

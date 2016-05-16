@@ -21,7 +21,7 @@
  */
 package acmi.l2.clientmod.unreal.bytecode.token;
 
-import acmi.l2.clientmod.unreal.UnrealPackageContext;
+import acmi.l2.clientmod.unreal.UnrealRuntimeContext;
 
 public class RotatorConst extends Token {
     public static final int OPCODE = 0x22;
@@ -52,7 +52,7 @@ public class RotatorConst extends Token {
     }
 
     @Override
-    public String toString(UnrealPackageContext context) {
+    public String toString(UnrealRuntimeContext context) {
         return "rot("
                 + pitch
                 + ", " + yaw

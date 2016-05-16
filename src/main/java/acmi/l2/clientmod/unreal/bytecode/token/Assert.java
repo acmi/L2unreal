@@ -22,7 +22,7 @@
 package acmi.l2.clientmod.unreal.bytecode.token;
 
 import acmi.l2.clientmod.io.annotation.UShort;
-import acmi.l2.clientmod.unreal.UnrealPackageContext;
+import acmi.l2.clientmod.unreal.UnrealRuntimeContext;
 
 public class Assert extends Token {
     public static final int OPCODE = 0x09;
@@ -53,7 +53,7 @@ public class Assert extends Token {
     }
 
     @Override
-    public String toString(UnrealPackageContext context) {
+    public String toString(UnrealRuntimeContext context) {
         return "assert " + expression.toString(context);
     }
 }

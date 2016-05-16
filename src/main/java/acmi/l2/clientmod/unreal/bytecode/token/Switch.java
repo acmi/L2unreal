@@ -22,13 +22,13 @@
 package acmi.l2.clientmod.unreal.bytecode.token;
 
 import acmi.l2.clientmod.io.annotation.UByte;
-import acmi.l2.clientmod.unreal.UnrealPackageContext;
+import acmi.l2.clientmod.unreal.UnrealRuntimeContext;
 
 public class Switch extends Token {
     public static final int OPCODE = 0x05;
 
     @UByte
-    public int offset;
+    public int offset; //expression size (ex long->8)
     public Token expression;
 
     public Switch(int offset, Token expression) {
@@ -53,7 +53,7 @@ public class Switch extends Token {
     }
 
     @Override
-    public String toString(UnrealPackageContext context) {
+    public String toString(UnrealRuntimeContext context) {
         return "switch(" + expression.toString(context) + ")";
     }
 }

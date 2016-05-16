@@ -21,7 +21,7 @@
  */
 package acmi.l2.clientmod.unreal.bytecode.token;
 
-import acmi.l2.clientmod.unreal.UnrealPackageContext;
+import acmi.l2.clientmod.unreal.UnrealRuntimeContext;
 
 public class GotoLabel extends Token {
     public static final int OPCODE = 0x0d;
@@ -48,7 +48,7 @@ public class GotoLabel extends Token {
     }
 
     @Override
-    public String toString(UnrealPackageContext context) {
-        return "goto " + label.toString(context);
+    public String toString(UnrealRuntimeContext context) {
+        return "goto '" + label.toString(context) + "'";
     }
 }
