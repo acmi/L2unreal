@@ -22,6 +22,9 @@
 package acmi.l2.clientmod.unreal.bytecode;
 
 import acmi.l2.clientmod.io.*;
+import acmi.l2.clientmod.unreal.Environment;
+import acmi.l2.clientmod.unreal.UnrealRuntimeContext;
+import acmi.l2.clientmod.unreal.UnrealSerializerFactory;
 import acmi.l2.clientmod.unreal.bytecode.token.Token;
 import org.junit.Test;
 
@@ -37,6 +40,9 @@ import static org.junit.Assert.assertEquals;
 public class BytecodeReadTest {
     @Test
     public void test() {
+        Environment environment = Environment.fromIni(new File(getClass().getResource("/system/L2.ini").getFile()));
+        UnrealSerializerFactory serializerFactory = new UnrealSerializerFactory(environment);
+
         File[] files = new File("src/test/resources/system")
                 .listFiles((dir, name) -> name.endsWith(".u"));
         for (File file : files) {
@@ -75,7 +81,7 @@ public class BytecodeReadTest {
                             while (readSize < size) {
                                 Token token = input.readObject(Token.class);
 
-                                System.out.println("\t" + String.format("/*0x%04x*/\t%s\t/* %s */", readSize, token, token.toString(context)));
+                                System.out.println("\t" + String.format("/*0x%04x*/\t%s\t/* %s */", readSize, token, token.toString(new UnrealRuntimeContext(entry, serializerFactory))));
 
                                 readSize += token.getSize(input.getContext());
                                 tokens.add(token);
