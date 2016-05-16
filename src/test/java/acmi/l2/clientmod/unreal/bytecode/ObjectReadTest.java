@@ -38,7 +38,10 @@ public class ObjectReadTest {
                 .listFiles((dir, name) -> name.endsWith(".u"));
         for (File file : files) {
             try (UnrealPackage up = new UnrealPackage(file, true)) {
-                up.getExportTable().forEach(serializerFactory::getOrCreateObject);
+                up.getExportTable()
+                        .stream()
+                        .filter(e -> e.getFullClassName().equalsIgnoreCase("Core.Class"))
+                        .forEach(serializerFactory::getOrCreateObject);
             }
         }
     }
