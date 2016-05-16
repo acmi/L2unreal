@@ -385,7 +385,7 @@ public class PropertiesUtil {
     }
 
     private static boolean match(Class<? extends Property> clazz, Type type) {
-        return type.clazz.isAssignableFrom(clazz);
+        return type.clazz != null && type.clazz.isAssignableFrom(clazz);
     }
 
     public static Type getType(Property property) {
