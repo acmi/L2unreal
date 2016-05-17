@@ -28,18 +28,18 @@ import acmi.l2.clientmod.unreal.UnrealRuntimeContext;
 public class ClassContext extends Token {
     public static final int OPCODE = 0x12;
 
-    public Token token1;
+    public Token clazz;
     @UShort
-    public int wSkip;
+    public int wSkip;   //member size
     @UByte
-    public int bSize;
-    public Token token2;
+    public int bSize;   //member call result size
+    public Token member;
 
-    public ClassContext(Token token1, int wSkip, int bSize, Token token2) {
-        this.token1 = token1;
+    public ClassContext(Token clazz, int wSkip, int bSize, Token member) {
+        this.clazz = clazz;
         this.wSkip = wSkip;
         this.bSize = bSize;
-        this.token2 = token2;
+        this.member = member;
     }
 
     public ClassContext() {
@@ -53,15 +53,15 @@ public class ClassContext extends Token {
     @Override
     public String toString() {
         return "ClassContext("
-                + token1
+                + clazz
                 + ", " + wSkip
                 + ", " + bSize
-                + ", " + token2
+                + ", " + member
                 + ')';
     }
 
     @Override
     public String toString(UnrealRuntimeContext context) {
-        return token1.toString(context) + "." + token2.toString(context);
+        return clazz.toString(context) + "." + member.toString(context);
     }
 }

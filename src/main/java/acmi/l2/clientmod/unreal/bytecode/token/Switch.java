@@ -28,7 +28,7 @@ public class Switch extends Token {
     public static final int OPCODE = 0x05;
 
     @UByte
-    public int offset; //expression size (ex long->8)
+    public int offset;  //expression size (string->0 byte->1 int->4 int64->8)
     public Token expression;
 
     public Switch(int offset, Token expression) {
