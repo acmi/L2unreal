@@ -23,6 +23,8 @@ package acmi.l2.clientmod.unreal;
 
 import acmi.l2.clientmod.crypt.CryptoException;
 import acmi.l2.clientmod.crypt.L2Crypt;
+import acmi.l2.clientmod.crypt.rsa.L2Ver41x;
+import acmi.l2.clientmod.crypt.rsa.L2Ver41xInputStream;
 import acmi.l2.clientmod.io.UnrealPackage;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
@@ -53,11 +55,23 @@ public class Environment {
     }
 
     public static Environment fromIni(File ini) throws UncheckedIOException {
-        try (InputStream fis = new FileInputStream(ini)) {
-            InputStream is = fis;
+        try (InputStream bis = new BufferedInputStream(new FileInputStream(ini))) {
+            InputStream is = bis;
+            bis.mark(28);
             try {
-                is = L2Crypt.decrypt(is, ini.getName());
+                if (L2Crypt.readHeader(bis) == 413) {
+                    bis.mark(128);
+                    try {
+                        L2Ver41xInputStream l2encdec = new L2Ver41xInputStream(bis, L2Ver41x.MODULUS_L2ENCDEC, L2Ver41x.PRIVATE_EXPONENT_L2ENCDEC);
+                        l2encdec.read();
+                        is = l2encdec;
+                    } catch (Exception e) {
+                        bis.reset();
+                        is = new L2Ver41xInputStream(bis, L2Ver41x.MODULUS_413, L2Ver41x.PRIVATE_EXPONENT_413);
+                    }
+                }
             } catch (CryptoException e) {
+                bis.reset();
                 log.fine(e.getMessage());
             }
 
