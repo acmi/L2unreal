@@ -387,7 +387,7 @@ public class UnrealSerializerFactory extends ReflectionSerializerFactory<UnrealR
     }
 
     private static class EnvironmentWrapper extends Environment {
-        private UnrealPackage engineAdds;
+        private Map<String, UnrealPackage> adds = new HashMap<>();
 
         public EnvironmentWrapper(File startDir, List<String> paths) {
             super(startDir, paths);
@@ -397,27 +397,31 @@ public class UnrealSerializerFactory extends ReflectionSerializerFactory<UnrealR
         public Stream<UnrealPackage> listPackages(String name) {
             Stream<UnrealPackage> stream = super.listPackages(name);
 
-            if (name.equalsIgnoreCase("Engine")) {
-                if (engineAdds == null) {
-                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                    try (InputStream is = getClass().getResourceAsStream("/Engine.u")) {
-                        byte[] buf = new byte[1024];
-                        int r;
-                        while ((r = is.read(buf)) != -1)
-                            baos.write(buf, 0, r);
-                    } catch (IOException e) {
-                        throw new UnrealException(e);
-                    }
-
-                    try (UnrealPackage up = new UnrealPackage(new RandomAccessMemory("Engine", baos.toByteArray(), UnrealPackage.getDefaultCharset()))) {
-                        engineAdds = up;
-                    }
-                }
-
-                stream = Stream.concat(Stream.of(engineAdds), stream);
+            if (name.equalsIgnoreCase("Engine") || name.equalsIgnoreCase("Core")) {
+                stream = appendCustomPackage(stream, name);
             }
 
             return stream;
+        }
+
+        private Stream<UnrealPackage> appendCustomPackage(Stream<UnrealPackage> stream, String name) {
+            if (!adds.containsKey(name)) {
+                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                try (InputStream is = getClass().getResourceAsStream("/" + name + ".u")) {
+                    byte[] buf = new byte[1024];
+                    int r;
+                    while ((r = is.read(buf)) != -1)
+                        baos.write(buf, 0, r);
+                } catch (IOException e) {
+                    throw new UnrealException(e);
+                }
+
+                try (UnrealPackage up = new UnrealPackage(new RandomAccessMemory(name, baos.toByteArray(), UnrealPackage.getDefaultCharset()))) {
+                    adds.put(name, up);
+                }
+            }
+
+            return Stream.concat(Stream.of(adds.get(name)), stream);
         }
     }
 }
