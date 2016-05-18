@@ -62,12 +62,13 @@ public class Environment {
                 if (L2Crypt.readHeader(bis) == 413) {
                     bis.mark(128);
                     try {
-                        L2Ver41xInputStream l2encdec = new L2Ver41xInputStream(bis, L2Ver41x.MODULUS_L2ENCDEC, L2Ver41x.PRIVATE_EXPONENT_L2ENCDEC);
-                        l2encdec.read();
-                        is = l2encdec;
+                        L2Ver41xInputStream orig = new L2Ver41xInputStream(bis, L2Ver41x.MODULUS_413, L2Ver41x.PRIVATE_EXPONENT_413);
+                        //noinspection ResultOfMethodCallIgnored
+                        orig.read();
+                        is = orig;
                     } catch (Exception e) {
                         bis.reset();
-                        is = new L2Ver41xInputStream(bis, L2Ver41x.MODULUS_413, L2Ver41x.PRIVATE_EXPONENT_413);
+                        is = new L2Ver41xInputStream(bis, L2Ver41x.MODULUS_L2ENCDEC, L2Ver41x.PRIVATE_EXPONENT_L2ENCDEC);
                     }
                 }
             } catch (CryptoException e) {
