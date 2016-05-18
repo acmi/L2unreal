@@ -265,16 +265,20 @@ public class PropertiesUtil {
     public static void writeStructBin(DataOutput objBuffer, List<L2Property> struct, String structName) throws UncheckedIOException {
         switch (structName) {
             case "Core.Object.Color":
-                for (int i = 0; i < 4; i++)
-                    objBuffer.writeByte((Integer) struct.get(i).getAt(0));
+                objBuffer.writeByte(struct.stream().filter(p -> p.getName().equalsIgnoreCase("R")).mapToInt(p -> (Integer) p.getAt(0)).findAny().orElse(0));
+                objBuffer.writeByte(struct.stream().filter(p -> p.getName().equalsIgnoreCase("G")).mapToInt(p -> (Integer) p.getAt(0)).findAny().orElse(0));
+                objBuffer.writeByte(struct.stream().filter(p -> p.getName().equalsIgnoreCase("B")).mapToInt(p -> (Integer) p.getAt(0)).findAny().orElse(0));
+                objBuffer.writeByte(struct.stream().filter(p -> p.getName().equalsIgnoreCase("A")).mapToInt(p -> (Integer) p.getAt(0)).findAny().orElse(0));
                 break;
             case "Core.Object.Vector":
-                for (int i = 0; i < 3; i++)
-                    objBuffer.writeFloat((Float) struct.get(i).getAt(0));
+                objBuffer.writeFloat(struct.stream().filter(p -> p.getName().equalsIgnoreCase("X")).map(p -> (Float) p.getAt(0)).findAny().orElse(0f));
+                objBuffer.writeFloat(struct.stream().filter(p -> p.getName().equalsIgnoreCase("Y")).map(p -> (Float) p.getAt(0)).findAny().orElse(0f));
+                objBuffer.writeFloat(struct.stream().filter(p -> p.getName().equalsIgnoreCase("Z")).map(p -> (Float) p.getAt(0)).findAny().orElse(0f));
                 break;
             case "Core.Object.Rotator":
-                for (int i = 0; i < 3; i++)
-                    objBuffer.writeInt((Integer) struct.get(i).getAt(0));
+                objBuffer.writeInt(struct.stream().filter(p -> p.getName().equalsIgnoreCase("Pitch")).mapToInt(p -> (Integer) p.getAt(0)).findAny().orElse(0));
+                objBuffer.writeInt(struct.stream().filter(p -> p.getName().equalsIgnoreCase("Yaw")).mapToInt(p -> (Integer) p.getAt(0)).findAny().orElse(0));
+                objBuffer.writeInt(struct.stream().filter(p -> p.getName().equalsIgnoreCase("Roll")).mapToInt(p -> (Integer) p.getAt(0)).findAny().orElse(0));
                 break;
             default:
                 throw new UnsupportedOperationException("not implemented");
