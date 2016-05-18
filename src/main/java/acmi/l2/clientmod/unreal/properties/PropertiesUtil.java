@@ -194,10 +194,10 @@ public class PropertiesUtil {
                 boolean array = (i > 0) || (type == Type.BOOL && ((Boolean) obj));
                 int info = (array ? 1 << 7 : 0) | (size << 4) | type.ordinal();
 
-                output.writeCompactInt(up.nameReference(template.entry.getObjectName().getName()));
+                output.writeCompactInt(nameReference(up, template.entry.getObjectName().getName()));
                 output.writeByte(info);
                 if (type == Type.STRUCT)
-                    output.writeCompactInt(up.nameReference(((StructProperty) template).struct.entry.getObjectName().getName()));
+                    output.writeCompactInt(nameReference(up, ((StructProperty) template).struct.entry.getObjectName().getName()));
                 switch (size) {
                     case 5:
                         output.writeByte(bytes.length);
@@ -279,6 +279,18 @@ public class PropertiesUtil {
             default:
                 throw new UnsupportedOperationException("not implemented");
         }
+    }
+
+    private static int nameReference(UnrealPackage up, String name) {
+        int nameRef = up.nameReference(name);
+        if (nameRef == -1) {
+            try {
+                up.addNameEntries(name);
+            } catch (UncheckedIOException e) {
+                throw new UnrealException("Couldn't add name entry: " + name, e);
+            }
+        }
+        return up.nameReference(name);
     }
 
     public enum Type {
