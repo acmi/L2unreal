@@ -364,8 +364,8 @@ public class UnrealSerializerFactory extends ReflectionSerializerFactory<UnrealR
         String k = parent + "@" + child;
         if (!isSubclassCache.containsKey(k)) {
             child = getSuperClass(child);
-
-            isSubclassCache.put(k, child != null && isSubclass(parent, child));
+            boolean val = child != null && isSubclass(parent, child);
+            isSubclassCache.put(k, val);
         }
         return isSubclassCache.get(k);
     }
