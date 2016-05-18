@@ -10,7 +10,7 @@ public class Texture extends Material {
     public MipMapData[] mipMaps;
 
     public static class MipMapData {
-        private int offset;                 //FIXME read method offset dependency
+        private int offset;
         public byte[] data;
         private int width, height;
         @UByte
@@ -18,7 +18,7 @@ public class Texture extends Material {
 
         @WriteMethod
         public void writeMipMapData(DataOutput output) {
-            output.writeInt(4 + sizeOfCompactInt(data.length) + data.length);
+            output.writeInt(output.getPosition() + 4 + sizeOfCompactInt(data.length) + data.length);
             output.writeByteArray(data);
             output.writeInt(width);
             output.writeInt(height);
