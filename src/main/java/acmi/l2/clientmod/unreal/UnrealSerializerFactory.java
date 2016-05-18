@@ -208,7 +208,7 @@ public class UnrealSerializerFactory extends ReflectionSerializerFactory<UnrealR
                     getOrCreateObject(dataInput.getContext().getUnrealPackage().objectReference(dataInput.readCompactInt()))));
             write.add((object, dataOutput) -> {
                 Object obj = (Object) getter.apply(object);
-                dataOutput.writeCompactInt(obj.entry.getObjectReference());
+                dataOutput.writeCompactInt(obj == null || obj.entry == null ? 0 : obj.entry.getObjectReference());
             });
         } else if (type.isArray() &&
                 type.getComponentType() == Token.class &&
