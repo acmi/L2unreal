@@ -24,6 +24,7 @@ package acmi.l2.clientmod.unreal.properties;
 import acmi.l2.clientmod.unreal.core.Property;
 import acmi.l2.clientmod.unreal.core.StructProperty;
 
+import java.util.Arrays;
 import java.util.List;
 
 public final class L2Property {
@@ -55,11 +56,34 @@ public final class L2Property {
         this.value[index] = value;
     }
 
-    public L2Property copy(){
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof L2Property)) return false;
+
+        L2Property that = (L2Property) o;
+
+        return template.equals(that.template) && Arrays.deepEquals(value, that.value);
+
+    }
+
+    @Override
+    public int hashCode() {
+        int result = template.hashCode();
+        result = 31 * result + Arrays.hashCode(value);
+        return result;
+    }
+
+    @Override
+    public String toString() {
+        return "L2Property[" + template + "]";
+    }
+
+    public L2Property copy() {
         L2Property copy = new L2Property(template);
         boolean primitive = PropertiesUtil.isPrimitive(template);
         boolean isStruct = template instanceof StructProperty;
-        for (int i=0; i<getSize(); i++){
+        for (int i = 0; i < getSize(); i++) {
             if (primitive)
                 copy.putAt(i, getAt(i));
             else if (isStruct)
