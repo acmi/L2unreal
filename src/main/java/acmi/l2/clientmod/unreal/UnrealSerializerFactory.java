@@ -355,19 +355,20 @@ public class UnrealSerializerFactory extends ReflectionSerializerFactory<UnrealR
         return null;
     }
 
-    private Map<String, Boolean> isSubclassCache = new HashMap<>();
+    private final Map<String, Boolean> isSubclassCache = new HashMap<>();
 
     public boolean isSubclass(String parent, String child) {
         if (parent.equalsIgnoreCase(Objects.requireNonNull(child)))
             return true;
 
         String k = parent + "@" + child;
-        if (!isSubclassCache.containsKey(k)) {
-            child = getSuperClass(child);
-            boolean val = child != null && isSubclass(parent, child);
-            isSubclassCache.put(k, val);
+        synchronized (isSubclassCache) {
+            if (!isSubclassCache.containsKey(k)) {
+                child = getSuperClass(child);
+                isSubclassCache.put(k, child != null && isSubclass(parent, child));
+            }
+            return isSubclassCache.get(k);
         }
-        return isSubclassCache.get(k);
     }
 
     public <T extends Struct> List<T> getStructTree(T struct) {
