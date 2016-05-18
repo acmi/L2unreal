@@ -394,4 +394,18 @@ public class PropertiesUtil {
                 return type;
         throw new IllegalStateException();
     }
+
+    public static boolean isPrimitive(Property property) {
+        return property instanceof ByteProperty ||
+                property instanceof IntProperty ||
+                property instanceof BoolProperty ||
+                property instanceof FloatProperty ||
+                property instanceof StrProperty;
+    }
+
+    public static List<L2Property> cloneStruct(List<L2Property> struct) {
+        return struct.stream()
+                .map(L2Property::copy)
+                .collect(Collectors.toList());
+    }
 }

@@ -22,6 +22,9 @@
 package acmi.l2.clientmod.unreal.properties;
 
 import acmi.l2.clientmod.unreal.core.Property;
+import acmi.l2.clientmod.unreal.core.StructProperty;
+
+import java.util.List;
 
 public final class L2Property {
     private final Property template;
@@ -50,5 +53,19 @@ public final class L2Property {
 
     public void putAt(int index, Object value) {
         this.value[index] = value;
+    }
+
+    public L2Property copy(){
+        L2Property copy = new L2Property(template);
+        boolean primitive = PropertiesUtil.isPrimitive(template);
+        boolean isStruct = template instanceof StructProperty;
+        for (int i=0; i<getSize(); i++){
+            if (primitive)
+                copy.putAt(i, getAt(i));
+            else if (isStruct)
+                copy.putAt(i, PropertiesUtil.cloneStruct((List<L2Property>) getAt(i)));
+            //else ???
+        }
+        return copy;
     }
 }
