@@ -1,7 +1,39 @@
 group 'acmi.l2.clientmod'
-version '1.0-SNAPSHOT'
+version '1.0'
 
 apply plugin: 'java'
+apply plugin: 'maven'
+
+task sourcesJar(type: Jar, dependsOn: classes) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+artifacts {
+    archives sourcesJar
+}
+
+configure(install.repositories.mavenInstaller) {
+    pom.project {
+        name = 'L2unreal'
+        description = 'Library for reading/modifying Lineage 2 unrealscript objects.'
+        url = 'https://github.com/acmi/L2unreal'
+        licenses {
+            license {
+                name = 'The MIT License'
+                url = 'https://opensource.org/licenses/MIT'
+                distribution = 'repo'
+            }
+        }
+        developers {
+            developer {
+                id = 'acmi'
+                name = 'Aleksei Sazonov'
+                email = 'acmi831@gmail.com'
+            }
+        }
+    }
+}
 
 repositories {
     mavenCentral()

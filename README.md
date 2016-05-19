@@ -30,3 +30,43 @@ try (UnrealPackage up = new UnrealPackage(new File(l2SystemFolder, fileName), tr
     System.out.println(textBuffer.text);
 }
 ```
+
+Build
+-----
+```
+gradlew build
+```
+Append `-x test` to skip tests.
+
+Install to local maven repository
+---------------------------------
+```
+gradlew install
+```
+
+Maven
+-----
+```maven
+<repository>
+    <id>L2unreal-github</id>
+    <url>https://raw.githubusercontent.com/acmi/L2unreal/mvn-repo</url>
+</repository>
+
+<dependency>
+    <groupId>acmi.l2.clientmod</groupId>
+    <artifactId>l2unreal</artifactId>
+    <version>1.0</version>
+</dependency>
+```
+
+Gradle
+------
+```gradle
+repositories {
+    maven { url "https://raw.githubusercontent.com/acmi/L2unreal/mvn-repo" }
+}
+
+dependencies {
+    compile group:'acmi.l2.clientmod', name:'l2unreal', version: '1.0'
+}
+```
