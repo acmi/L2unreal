@@ -25,22 +25,22 @@ import acmi.l2.clientmod.crypt.CryptoException;
 import acmi.l2.clientmod.crypt.L2Crypt;
 import acmi.l2.clientmod.crypt.rsa.L2Ver41x;
 import acmi.l2.clientmod.crypt.rsa.L2Ver41xInputStream;
+import acmi.l2.clientmod.io.BufferedRandomAccessFile;
+import acmi.l2.clientmod.io.RandomAccess;
+import acmi.l2.clientmod.io.RandomAccessFile;
 import acmi.l2.clientmod.io.UnrealPackage;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.io.filefilter.WildcardFileFilter;
 
 import java.io.*;
 import java.util.*;
-import java.util.function.Predicate;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
-public class Environment {
+public class Environment implements Env {
     private static final Logger log = Logger.getLogger(Environment.class.getName());
+
+    private static final Set<String> BUFFERED_PACKAGES = new HashSet<>(Arrays.asList(System.getProperty("L2unreal.bufferedExt", "").split(",")));
 
     private static final Pattern PATHS_PATTERN = Pattern.compile("\\s*Paths=(.*)");
 
@@ -92,54 +92,47 @@ public class Environment {
         }
     }
 
+    @Override
     public File getStartDir() {
         return startDir;
     }
 
+    @Override
     public List<String> getPaths() {
         return paths;
     }
 
-    public Stream<File> listFiles() {
-        return paths.stream().flatMap(s -> {
-            File file = new File(startDir, s);
-            File parent = file.getParentFile();
-            if (!parent.exists()) return Stream.empty();
-            return FileUtils.listFiles(file.getParentFile(), new WildcardFileFilter(file.getName()), null).stream();
-        });
-    }
-
-    public Stream<File> getPackage(String name) {
-        return listFiles()
-                .filter(file -> FilenameUtils.removeExtension(file.getName()).equalsIgnoreCase(name));
-    }
-
-    public Stream<UnrealPackage> listPackages(String name) {
-        return getPackage(name)
-                .map(this::getPackage)
-                .filter(Optional::isPresent)
-                .map(Optional::get);
-    }
-
-    public Optional<UnrealPackage.ExportEntry> getExportEntry(String fullName, Predicate<String> fullClassName) throws UncheckedIOException {
-        String pckgName = fullName.substring(0, fullName.indexOf('.'));
-        return listPackages(pckgName)
-                .map(UnrealPackage::getExportTable)
-                .flatMap(Collection::stream)
-                .filter(e -> e.getObjectFullName().equalsIgnoreCase(fullName))
-                .filter(e -> fullClassName.test(e.getFullClassName()))
-                .findAny();
-    }
-
-    private Optional<UnrealPackage> getPackage(File f) {
+    @Override
+    public Optional<UnrealPackage> getPackage(File f) {
         if (!pckgCache.containsKey(f)) {
-            try (UnrealPackage up = new UnrealPackage(f, true)) {
-                pckgCache.put(f, up);
+            log.fine("Loading " + f.getPath());
+
+            try (RandomAccess ra = createRandomAccess(f)) {
+                pckgCache.put(f, new UnrealPackage(ra));
             } catch (Exception e) {
-                log.log(Level.WARNING, e, () -> String.format("Couldn't load %s", f));
+                log.log(Level.WARNING, e, () -> String.format("Couldn't load %s", f.getPath()));
             }
         }
 
         return Optional.ofNullable(pckgCache.get(f));
+    }
+
+    @Override
+    public void markInvalid(String pckg) {
+        getPackage(pckg).forEach(file -> {
+            pckgCache.remove(file);
+
+            log.fine("Remove from cache " + file.getPath());
+        });
+    }
+
+    protected RandomAccess createRandomAccess(File f) {
+        if (BUFFERED_PACKAGES.contains(f.getName().substring(f.getName().lastIndexOf('.') + 1))) {
+            log.fine("Using buffered random access for " + f.getPath());
+
+            return new BufferedRandomAccessFile(f, true, UnrealPackage.getDefaultCharset());
+        }
+
+        return new RandomAccessFile(f, true, UnrealPackage.getDefaultCharset());
     }
 }

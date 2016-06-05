@@ -66,13 +66,13 @@ public class UnrealSerializerFactory extends ReflectionSerializerFactory<UnrealR
     private Map<Integer, acmi.l2.clientmod.unreal.core.Function> nativeFunctions = new HashMap<>();
     private ObservableSet<String> loaded = FXCollections.observableSet(new HashSet<>());
 
-    private Environment environment;
+    private Env environment;
 
-    public UnrealSerializerFactory(Environment environment) {
-        this.environment = new EnvironmentWrapper(environment.getStartDir(), environment.getPaths());
+    public UnrealSerializerFactory(Env environment) {
+        this.environment = new EnvironmentWrapper(environment);
     }
 
-    public Environment getEnvironment() {
+    public Env getEnvironment() {
         return environment;
     }
 
@@ -93,7 +93,7 @@ public class UnrealSerializerFactory extends ReflectionSerializerFactory<UnrealR
             return null;
 
         if (!objects.containsKey(packageLocalEntry)) {
-            log.fine(() -> String.format("Loading %s", packageLocalEntry));
+            log.finest(() -> String.format("Loading %s", packageLocalEntry));
 
             UnrealPackage.ExportEntry entry;
             try {
@@ -159,9 +159,7 @@ public class UnrealSerializerFactory extends ReflectionSerializerFactory<UnrealR
         if (entry == null)
             return Optional.empty();
 
-        return entry instanceof UnrealPackage.ExportEntry ?
-                Optional.of((UnrealPackage.ExportEntry) entry) :
-                getExportEntry(entry.getObjectFullName(), clazz -> clazz.equalsIgnoreCase(entry.getFullClassName()));
+        return getExportEntry(entry.getObjectFullName(), clazz -> clazz.equalsIgnoreCase(entry.getFullClassName()));
     }
 
     private Optional<UnrealPackage.ExportEntry> getExportEntry(String objName, Predicate<String> objClass) {
@@ -172,7 +170,7 @@ public class UnrealSerializerFactory extends ReflectionSerializerFactory<UnrealR
         Class<?> clazz = null;
         try {
             String javaClassName = unrealClassesPackage + "." + unrealClassNameToJavaClassName(className);
-            log.finer(() -> String.format("unreal[%s]->jvm[%s]", className, javaClassName));
+            log.finest(() -> String.format("unreal[%s]->jvm[%s]", className, javaClassName));
             clazz = Class.forName(javaClassName);
             return clazz.asSubclass(Object.class);
         } catch (ClassNotFoundException e) {
@@ -208,7 +206,7 @@ public class UnrealSerializerFactory extends ReflectionSerializerFactory<UnrealR
                     getOrCreateObject(dataInput.getContext().getUnrealPackage().objectReference(dataInput.readCompactInt()))));
             write.add((object, dataOutput) -> {
                 Object obj = (Object) getter.apply(object);
-                dataOutput.writeCompactInt(obj == null || obj.entry == null ? 0 : obj.entry.getObjectReference());
+                dataOutput.writeCompactInt(obj == null || obj.entry == null ? 0 : dataOutput.getContext().getUnrealPackage().objectReferenceByName(obj.entry.getObjectFullName(), c->c.equalsIgnoreCase(obj.entry.getFullClassName())));
             });
         } else if (type.isArray() &&
                 type.getComponentType() == Token.class &&
@@ -278,7 +276,7 @@ public class UnrealSerializerFactory extends ReflectionSerializerFactory<UnrealR
                 Runnable loadProps = () -> {
                     obj.properties.addAll(PropertiesUtil.readProperties(input, obj.getFullName()));
                     loaded.add(entry.getObjectFullName());
-                    log.fine(() -> entry.getObjectFullName() + " properties loaded");
+                    log.finest(() -> entry.getObjectFullName() + " properties loaded");
                 };
                 if (entry.getObjectSuperClass() != null) {
                     String superClass = entry.getObjectSuperClass().getObjectFullName();
@@ -320,7 +318,7 @@ public class UnrealSerializerFactory extends ReflectionSerializerFactory<UnrealR
                     log.warning(() -> obj + " " + obj.unreadBytes.length + " bytes ignored");
             }
 
-            log.fine(() -> entry.getObjectFullName() + " loaded");
+            log.finest(() -> entry.getObjectFullName() + " loaded");
         } catch (CompletionException e) {
             throw e.getCause();
         }
@@ -387,16 +385,37 @@ public class UnrealSerializerFactory extends ReflectionSerializerFactory<UnrealR
         return Optional.ofNullable(nativeFunctions.get(index));
     }
 
-    private static class EnvironmentWrapper extends Environment {
+    private static class EnvironmentWrapper implements Env {
+        private Env environment;
         private Map<String, UnrealPackage> adds = new HashMap<>();
 
-        public EnvironmentWrapper(File startDir, List<String> paths) {
-            super(startDir, paths);
+        public EnvironmentWrapper(Env environment) {
+            this.environment = environment;
+        }
+
+        @Override
+        public File getStartDir() {
+            return environment.getStartDir();
+        }
+
+        @Override
+        public List<String> getPaths() {
+            return environment.getPaths();
+        }
+
+        @Override
+        public Optional<UnrealPackage> getPackage(File f) {
+            return environment.getPackage(f);
+        }
+
+        @Override
+        public void markInvalid(String pckg) {
+            environment.markInvalid(pckg);
         }
 
         @Override
         public Stream<UnrealPackage> listPackages(String name) {
-            Stream<UnrealPackage> stream = super.listPackages(name);
+            Stream<UnrealPackage> stream = environment.listPackages(name);
 
             if (name.equalsIgnoreCase("Engine") || name.equalsIgnoreCase("Core")) {
                 stream = appendCustomPackage(stream, name);
