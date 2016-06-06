@@ -41,9 +41,8 @@ import javafx.collections.ObservableSet;
 import java.io.*;
 import java.lang.annotation.Annotation;
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionException;
-import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.*;
 import java.util.logging.Level;
@@ -53,14 +52,23 @@ import java.util.stream.Stream;
 public class UnrealSerializerFactory extends ReflectionSerializerFactory<UnrealRuntimeContext> {
     private static final Logger log = Logger.getLogger(UnrealSerializerFactory.class.getName());
 
+    private static final String LOAD_THREAD_NAME = "Unreal loader";
+    private static final int LOAD_THREAD_STACK_SIZE = loadThreadStackSize();
+
+    private static int loadThreadStackSize() {
+        try {
+            return Integer.parseInt(System.getProperty("L2unreal.loadThreadStackSize", "8000000"));
+        } catch (NumberFormatException e) {
+            return 0;
+        }
+    }
+
     public static String unrealClassesPackage = "acmi.l2.clientmod.unreal";
 
     public static final Predicate<String> IS_STRUCT = c -> c.equalsIgnoreCase("Core.Struct") ||
             c.equalsIgnoreCase("Core.Function") ||
             c.equalsIgnoreCase("Core.State") ||
             c.equalsIgnoreCase("Core.Class");
-
-    private ForkJoinPool forkJoinPool = new ForkJoinPool();
 
     private Map<UnrealPackage.Entry, Object> objects = new HashMap<>();
     private Map<Integer, acmi.l2.clientmod.unreal.core.Function> nativeFunctions = new HashMap<>();
@@ -102,7 +110,14 @@ public class UnrealSerializerFactory extends ReflectionSerializerFactory<UnrealR
                     Class<? extends Object> clazz = getClass(entry.getFullClassName());
                     Object obj = clazz.newInstance();
                     objects.put(entry, obj);
-                    load(obj, entry);
+                    Runnable load = () -> load(obj, entry);
+                    if (LOAD_THREAD_NAME.equals(Thread.currentThread().getName())) {
+                        load.run();
+                    } else {
+                        ExecutorService executorService = Executors.newSingleThreadExecutor(r -> new Thread(null, r, LOAD_THREAD_NAME, LOAD_THREAD_STACK_SIZE));
+                        executorService.submit(load).get();
+                        executorService.shutdown();
+                    }
                 } else {
                     create(packageLocalEntry.getObjectFullName(), packageLocalEntry.getFullClassName());
                 }
@@ -170,8 +185,8 @@ public class UnrealSerializerFactory extends ReflectionSerializerFactory<UnrealR
         Class<?> clazz = null;
         try {
             String javaClassName = unrealClassesPackage + "." + unrealClassNameToJavaClassName(className);
-            log.finest(() -> String.format("unreal[%s]->jvm[%s]", className, javaClassName));
             clazz = Class.forName(javaClassName);
+            log.finest(() -> String.format("unreal[%s]->jvm[%s]", className, javaClassName));
             return clazz.asSubclass(Object.class);
         } catch (ClassNotFoundException e) {
             log.finer(() -> String.format("Class %s not implemented in java", className));
@@ -206,7 +221,7 @@ public class UnrealSerializerFactory extends ReflectionSerializerFactory<UnrealR
                     getOrCreateObject(dataInput.getContext().getUnrealPackage().objectReference(dataInput.readCompactInt()))));
             write.add((object, dataOutput) -> {
                 Object obj = (Object) getter.apply(object);
-                dataOutput.writeCompactInt(obj == null || obj.entry == null ? 0 : dataOutput.getContext().getUnrealPackage().objectReferenceByName(obj.entry.getObjectFullName(), c->c.equalsIgnoreCase(obj.entry.getFullClassName())));
+                dataOutput.writeCompactInt(obj == null || obj.entry == null ? 0 : dataOutput.getContext().getUnrealPackage().objectReferenceByName(obj.entry.getObjectFullName(), c -> c.equalsIgnoreCase(obj.entry.getFullClassName())));
             });
         } else if (type.isArray() &&
                 type.getComponentType() == Token.class &&
@@ -239,89 +254,83 @@ public class UnrealSerializerFactory extends ReflectionSerializerFactory<UnrealR
         }
     }
 
-    private void load(Object obj, UnrealPackage.ExportEntry entry) throws Throwable {
-        try {
-            ObjectInput<UnrealRuntimeContext> input = new ObjectInputStream<UnrealRuntimeContext>(
-                    new ByteArrayInputStream(entry.getObjectRawDataExternally()),
-                    entry.getUnrealPackage().getFile().getCharset(),
-                    entry.getOffset(),
-                    this,
-                    new UnrealRuntimeContext(entry, this)
-            ) {
-                @Override
-                public java.lang.Object readObject(Class clazz) throws UncheckedIOException {
-                    if (getSerializerFactory() == null)
-                        throw new IllegalStateException("SerializerFactory is null");
+    private void load(Object obj, UnrealPackage.ExportEntry entry) {
+        ObjectInput<UnrealRuntimeContext> input = new ObjectInputStream<UnrealRuntimeContext>(
+                new ByteArrayInputStream(entry.getObjectRawDataExternally()),
+                entry.getUnrealPackage().getFile().getCharset(),
+                entry.getOffset(),
+                this,
+                new UnrealRuntimeContext(entry, this)
+        ) {
+            @Override
+            public java.lang.Object readObject(Class clazz) throws UncheckedIOException {
+                if (getSerializerFactory() == null)
+                    throw new IllegalStateException("SerializerFactory is null");
 
-                    Serializer serializer = getSerializerFactory().forClass(clazz);
-                    java.lang.Object obj = serializer.instantiate(this);
-                    if (!(obj instanceof acmi.l2.clientmod.unreal.core.Object))
-                        throw new RuntimeException("USE input.getSerializerFactory().forClass(class).readObject(object, input);");
-                    return obj;
-                }
-            };
-
-            CompletableFuture.runAsync(() -> {
-                Serializer serializer = forClass(obj.getClass());
-                serializer.readObject(obj, input);
-            }, forkJoinPool).join();
-
-            if (obj instanceof acmi.l2.clientmod.unreal.core.Function) {
-                acmi.l2.clientmod.unreal.core.Function func = (acmi.l2.clientmod.unreal.core.Function) obj;
-                if (func.nativeIndex > 0)
-                    nativeFunctions.put(func.nativeIndex, func);
+                Serializer serializer = getSerializerFactory().forClass(clazz);
+                java.lang.Object obj = serializer.instantiate(this);
+                if (!(obj instanceof acmi.l2.clientmod.unreal.core.Object))
+                    throw new RuntimeException("USE input.getSerializerFactory().forClass(class).readObject(object, input);");
+                return obj;
             }
+        };
 
-            if (entry.getFullClassName().equalsIgnoreCase("Core.Class")) {
-                Runnable loadProps = () -> {
-                    obj.properties.addAll(PropertiesUtil.readProperties(input, obj.getFullName()));
-                    loaded.add(entry.getObjectFullName());
-                    log.finest(() -> entry.getObjectFullName() + " properties loaded");
-                };
-                if (entry.getObjectSuperClass() != null) {
-                    String superClass = entry.getObjectSuperClass().getObjectFullName();
+        Serializer serializer = forClass(obj.getClass());
+        serializer.readObject(obj, input);
 
-                    if (loaded.contains(superClass)) {
-                        loadProps.run();
-                    } else {
-                        AtomicInteger ai = new AtomicInteger(0);
-                        Consumer<InvalidationListener> c = il -> {
-                            if (loaded.contains(superClass) && ai.getAndIncrement() == 0) {
-                                loaded.removeListener(il);
-                                loadProps.run();
-                            }
-                        };
-                        InvalidationListener il = new InvalidationListener() {
-                            @Override
-                            public void invalidated(javafx.beans.Observable observable) {
-                                c.accept(this);
-                            }
-                        };
-                        loaded.addListener(il);
-                        c.accept(il);
-                    }
-                } else {
-                    loadProps.run();
-                }
-            }
-
-            if (!(obj instanceof acmi.l2.clientmod.unreal.core.Class)) {
-                ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                try {
-                    while (true)
-                        baos.write(input.readUnsignedByte());
-                } catch (UncheckedIOException ignore) {
-                }
-
-                obj.unreadBytes = baos.toByteArray();
-                if (obj.unreadBytes.length > 0)
-                    log.warning(() -> obj + " " + obj.unreadBytes.length + " bytes ignored");
-            }
-
-            log.finest(() -> entry.getObjectFullName() + " loaded");
-        } catch (CompletionException e) {
-            throw e.getCause();
+        if (obj instanceof acmi.l2.clientmod.unreal.core.Function) {
+            acmi.l2.clientmod.unreal.core.Function func = (acmi.l2.clientmod.unreal.core.Function) obj;
+            if (func.nativeIndex > 0)
+                nativeFunctions.put(func.nativeIndex, func);
         }
+
+        if (entry.getFullClassName().equalsIgnoreCase("Core.Class")) {
+            Runnable loadProps = () -> {
+                obj.properties.addAll(PropertiesUtil.readProperties(input, obj.getFullName()));
+                loaded.add(entry.getObjectFullName());
+                log.finest(() -> entry.getObjectFullName() + " properties loaded");
+            };
+            if (entry.getObjectSuperClass() != null) {
+                String superClass = entry.getObjectSuperClass().getObjectFullName();
+
+                if (loaded.contains(superClass)) {
+                    loadProps.run();
+                } else {
+                    AtomicInteger ai = new AtomicInteger(0);
+                    Consumer<InvalidationListener> c = il -> {
+                        if (loaded.contains(superClass) && ai.getAndIncrement() == 0) {
+                            loaded.removeListener(il);
+                            loadProps.run();
+                        }
+                    };
+                    InvalidationListener il = new InvalidationListener() {
+                        @Override
+                        public void invalidated(javafx.beans.Observable observable) {
+                            c.accept(this);
+                        }
+                    };
+                    loaded.addListener(il);
+                    c.accept(il);
+                }
+            } else {
+                loadProps.run();
+            }
+        }
+
+        if (!(obj instanceof acmi.l2.clientmod.unreal.core.Class)) {
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            try {
+                while (true)
+                    baos.write(input.readUnsignedByte());
+            } catch (UncheckedIOException ignore) {
+            }
+
+            obj.unreadBytes = baos.toByteArray();
+            if (obj.unreadBytes.length > 0)
+                log.warning(() -> obj + " " + obj.unreadBytes.length + " bytes ignored");
+        }
+
+        log.finest(() -> entry.getObjectFullName() + " loaded");
     }
 
     public Optional<Struct> getStruct(String name) {

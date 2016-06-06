@@ -47,7 +47,13 @@ interface Env {
                 .filter(file -> FilenameUtils.removeExtension(file.getName()).equalsIgnoreCase(name));
     }
 
-    Optional<UnrealPackage> getPackage(File f);
+    default Optional<UnrealPackage> getPackage(File f) {
+        try (UnrealPackage up = new UnrealPackage(f, true)) {
+            return Optional.of(up);
+        } catch (Exception e) {
+            return Optional.empty();
+        }
+    }
 
     default Stream<UnrealPackage> listPackages(String name) {
         return getPackage(name)
@@ -57,10 +63,11 @@ interface Env {
     }
 
     default Optional<UnrealPackage.ExportEntry> getExportEntry(String fullName, Predicate<String> fullClassName) throws UncheckedIOException {
-        String pckgName = fullName.substring(0, fullName.indexOf('.'));
-        return listPackages(pckgName)
+        String[] path = fullName.split("\\.");
+        return listPackages(path[0])
                 .map(UnrealPackage::getExportTable)
-                .flatMap(Collection::stream)
+                .flatMap(Collection::parallelStream)
+                .filter(e -> e.getObjectName().getName().equals(path[path.length - 1]))
                 .filter(e -> e.getObjectFullName().equalsIgnoreCase(fullName))
                 .filter(e -> fullClassName.test(e.getFullClassName()))
                 .findAny();

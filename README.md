@@ -2,6 +2,11 @@ L2unreal
 ========
 Library for reading/modifying Lineage 2 unrealscript objects.
 
+Note
+----
+`UnrealSerializerFactory` uses `Thread.stackSize`, which is not available on certain JVMs.
+In that case you should disable it with `-DL2unreal.loadThreadStackSize=0` and set stack size via `-Xss` or `-XX:ThreadStackSize` parameter (at least 8MB).
+
 Usage
 -----
 ```java
@@ -55,7 +60,7 @@ Maven
 <dependency>
     <groupId>acmi.l2.clientmod</groupId>
     <artifactId>l2unreal</artifactId>
-    <version>1.1</version>
+    <version>1.2</version>
 </dependency>
 ```
 
@@ -67,6 +72,6 @@ repositories {
 }
 
 dependencies {
-    compile group:'acmi.l2.clientmod', name:'l2unreal', version: '1.1'
+    compile group:'acmi.l2.clientmod', name:'l2unreal', version: '1.2'
 }
 ```

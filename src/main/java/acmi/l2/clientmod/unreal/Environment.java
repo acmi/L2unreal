@@ -29,6 +29,7 @@ import acmi.l2.clientmod.io.BufferedRandomAccessFile;
 import acmi.l2.clientmod.io.RandomAccess;
 import acmi.l2.clientmod.io.RandomAccessFile;
 import acmi.l2.clientmod.io.UnrealPackage;
+import org.apache.commons.io.FilenameUtils;
 
 import java.io.*;
 import java.util.*;
@@ -36,6 +37,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class Environment implements Env {
     private static final Logger log = Logger.getLogger(Environment.class.getName());
@@ -47,6 +49,7 @@ public class Environment implements Env {
     private File startDir;
     private List<String> paths;
 
+    private Map<String, List<File>> fileCache = new HashMap<>();
     private Map<File, UnrealPackage> pckgCache = new HashMap<>();
 
     public Environment(File startDir, List<String> paths) {
@@ -100,6 +103,17 @@ public class Environment implements Env {
     @Override
     public List<String> getPaths() {
         return paths;
+    }
+
+    @Override
+    public Stream<File> getPackage(String name) {
+        if (!fileCache.containsKey(name)) {
+            fileCache.put(name, listFiles()
+                    .filter(file -> FilenameUtils.removeExtension(file.getName()).equalsIgnoreCase(name))
+                    .collect(Collectors.toList()));
+        }
+
+        return fileCache.get(name).stream();
     }
 
     @Override
