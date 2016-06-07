@@ -28,7 +28,7 @@ import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
-interface Env {
+public interface Env {
     File getStartDir();
 
     List<String> getPaths();
