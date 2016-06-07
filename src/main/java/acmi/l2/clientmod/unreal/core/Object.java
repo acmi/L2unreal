@@ -93,4 +93,39 @@ public class Object {
         @Compact
         public int offset;
     }
+
+    public static class Vector {
+        public float x, y, z;
+    }
+
+    public static class Sphere extends Vector {
+        public float r;
+    }
+
+    public static class Plane extends Vector {
+        public float w;
+    }
+
+    public static class Matrix {
+        public Plane xPlane;
+        public Plane yPlane;
+        public Plane zPlane;
+        public Plane wPlane;
+    }
+
+    public static class Scale {
+        public Vector scale;
+        public float sheerRate;
+        public byte sheerAxis;
+    }
+
+    public static class Box {
+        public Vector min;
+        public Vector max;
+        public byte isValid;
+    }
+
+    public static class Color {
+        public byte r, g, b, a;
+    }
 }
