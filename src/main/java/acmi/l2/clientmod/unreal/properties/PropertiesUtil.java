@@ -33,8 +33,7 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.lang.Class;
 import java.lang.Object;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
@@ -423,5 +422,103 @@ public class PropertiesUtil {
         return struct.stream()
                 .map(L2Property::copy)
                 .collect(Collectors.toList());
+    }
+
+    public static L2Property create(Property property, String structName, UnrealSerializerFactory serializer, UnrealPackage up) {
+        L2Property l2property = new L2Property(property);
+        for (int i = 0; i < l2property.getSize(); i++)
+            l2property.putAt(i, defaultValue(property, structName, serializer, up));
+        return l2property;
+    }
+
+    public static Object defaultValue(Property property, String structName, UnrealSerializerFactory serializer, UnrealPackage unrealPackage) {
+        Optional<acmi.l2.clientmod.unreal.core.Class> classOpt = serializer.getStruct(structName)
+                .filter(struct -> struct instanceof acmi.l2.clientmod.unreal.core.Class)
+                .map(struct -> (acmi.l2.clientmod.unreal.core.Class) struct);
+
+        if (classOpt.isPresent()) {
+            Object[] defaultValue = new Object[1];
+            serializer.getStructTree(classOpt.get()).forEach(superClass -> superClass.properties
+                    .parallelStream()
+                    .filter(l2Property -> l2Property.getTemplate().equals(property))
+                    .findAny()
+                    .ifPresent(l2Property -> defaultValue[0] = l2Property.getAt(0)));
+            if (defaultValue[0] != null) {
+                if (PropertiesUtil.isPrimitive(property)) {
+                    return defaultValue[0];
+                } else if (property instanceof StructProperty) {
+                    return PropertiesUtil.cloneStruct((List<L2Property>) defaultValue[0]);
+                }
+            }
+        }
+
+        return defaultValue(property, serializer, unrealPackage);
+    }
+
+    public static Object defaultValue(Property property, UnrealSerializerFactory serializer, UnrealPackage unrealPackage) {
+        if (property instanceof ByteProperty) {
+            return 0;
+        } else if (property instanceof IntProperty) {
+            return 0;
+        } else if (property instanceof BoolProperty) {
+            return false;
+        } else if (property instanceof FloatProperty) {
+            return 0f;
+        } else if (property instanceof acmi.l2.clientmod.unreal.core.ObjectProperty) {
+            return 0;
+        } else if (property instanceof NameProperty) {
+            return unrealPackage.nameReference("None");
+        } else if (property instanceof StructProperty) {
+            String structName = ((StructProperty) property).struct.getFullName();
+            return getProperties(structName, serializer, true, true)
+                    .map(p -> create(p, structName, serializer, unrealPackage))
+                    .collect(Collectors.toList());
+        } else if (property instanceof ArrayProperty) {
+            return new ArrayList();
+        } else if (property instanceof StrProperty) {
+            return "";
+        }
+        throw new IllegalStateException(String.valueOf(property));
+    }
+
+    public static Stream<Property> getProperties(String structName, UnrealSerializerFactory serializer, boolean editOnly, boolean hideCategories) {
+        Struct struct = serializer.getStruct(structName).orElse(new Struct());
+
+        return PropertiesUtil.getPropertyFields(serializer, structName)
+                .filter(p -> !editOnly || (p.propertyFlags & Property.CPF.Edit.getMask()) != 0)
+                .filter(p -> !(struct instanceof acmi.l2.clientmod.unreal.core.Class) || (!hideCategories || !Arrays.asList(((acmi.l2.clientmod.unreal.core.Class) struct).hideCategories).contains(p.category)));
+    }
+
+    public static void removeDefaults(List<L2Property> properties, String structName, UnrealSerializerFactory serializer, UnrealPackage unrealPackage) {
+        if (properties == null)
+            return;
+
+        for (Iterator<L2Property> it = properties.iterator(); it.hasNext(); ) {
+            L2Property property = it.next();
+
+            java.lang.Object def = defaultValue(property.getTemplate(), structName, serializer, unrealPackage);
+
+            boolean del = true;
+            for (int i = 0; i < property.getSize(); i++) {
+                java.lang.Object obj = property.getAt(i);
+
+                if (property.getTemplate() instanceof StructProperty) {
+                    if (obj == null)
+                        continue;
+
+                    List<L2Property> struct = (List<L2Property>) obj;
+                    removeDefaults(struct, ((StructProperty) property.getTemplate()).struct.getFullName(), serializer, unrealPackage);
+                    if (!struct.isEmpty())
+                        del = false;
+                    else
+                        property.putAt(i, null);
+                } else if (!def.equals(obj)) {
+                    del = false;
+                }
+            }
+            if (del) {
+                it.remove();
+            }
+        }
     }
 }
