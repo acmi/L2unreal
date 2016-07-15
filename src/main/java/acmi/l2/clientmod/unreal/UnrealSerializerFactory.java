@@ -434,6 +434,7 @@ public class UnrealSerializerFactory extends ReflectionSerializerFactory<UnrealR
         }
 
         private Stream<UnrealPackage> appendCustomPackage(Stream<UnrealPackage> stream, String name) {
+            name = canonizeName(name);
             if (!adds.containsKey(name)) {
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
                 try (InputStream is = getClass().getResourceAsStream("/" + name + ".u")) {
@@ -451,6 +452,10 @@ public class UnrealSerializerFactory extends ReflectionSerializerFactory<UnrealR
             }
 
             return Stream.concat(Stream.of(adds.get(name)), stream);
+        }
+
+        private String canonizeName(String name) {
+            return name.substring(0, 1).toUpperCase() + name.substring(1).toLowerCase();
         }
     }
 }
