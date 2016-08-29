@@ -39,8 +39,9 @@ public class GlobalFunction extends Token {
     @FunctionParams
     public Token[] params;
 
-    public GlobalFunction(int nameRef) {
+    public GlobalFunction(int nameRef, Token... params) {
         this.nameRef = nameRef;
+        this.params = params;
     }
 
     public GlobalFunction() {
