@@ -64,13 +64,20 @@ public interface Env {
 
     default Optional<UnrealPackage.ExportEntry> getExportEntry(String fullName, Predicate<String> fullClassName) throws UncheckedIOException {
         String[] path = fullName.split("\\.");
-        return listPackages(path[0])
+        Optional<UnrealPackage.ExportEntry> entryOptional = listPackages(path[0])
                 .map(UnrealPackage::getExportTable)
                 .flatMap(Collection::parallelStream)
-                .filter(e -> e.getObjectName().getName().equalsIgnoreCase(path[path.length - 1]) ||
-                        e.getObjectFullName().equalsIgnoreCase(fullName))
+                .filter(e -> e.getObjectFullName().equalsIgnoreCase(fullName))
                 .filter(e -> fullClassName.test(e.getFullClassName()))
                 .findAny();
+        if (!entryOptional.isPresent())
+            entryOptional = listPackages(path[0])
+                    .map(UnrealPackage::getExportTable)
+                    .flatMap(Collection::parallelStream)
+                    .filter(e -> e.getObjectName().getName().equalsIgnoreCase(path[path.length - 1]))
+                    .filter(e -> fullClassName.test(e.getFullClassName()))
+                    .findAny();
+        return entryOptional;
     }
 
     void markInvalid(String pckg);
