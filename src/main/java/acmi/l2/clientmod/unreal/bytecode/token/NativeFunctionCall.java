@@ -42,21 +42,17 @@ public class NativeFunctionCall extends Token {
     }
 
     @Override
-    protected Sizer getSizer() {
-        return (token, context) -> {
-            NativeFunctionCall nativeFunctionCall = (NativeFunctionCall) token;
-            return (nativeFunctionCall.nativeIndex > 0xff ? 2 : 1) +
-                    Stream.concat(Arrays.stream(nativeFunctionCall.params), Stream.of(new EndFunctionParams()))
-                            .mapToInt(t -> t.getSize(context)).sum();
-        };
+    protected Sizer<NativeFunctionCall> getSizer() {
+        return (token, context) -> (token.nativeIndex > 0xff ? 2 : 1) +
+                Stream.concat(Arrays.stream(token.params), Stream.of(new EndFunctionParams()))
+                        .mapToInt(t -> t.getSize(context)).sum();
     }
 
     @Override
     public String toString() {
         return "NativeFunctionCall("
                 + nativeIndex
-                + (params == null || params.length == 0 ? "" : ", " + Arrays.stream(params).map(Objects::toString).collect(Collectors.joining(", ")))
-                + ')';
+                + (params == null || params.length == 0 ? ")" : Arrays.stream(params).map(Objects::toString).collect(Collectors.joining(", ", ", ", ")")));
     }
 
     public String toString(UnrealRuntimeContext context) {

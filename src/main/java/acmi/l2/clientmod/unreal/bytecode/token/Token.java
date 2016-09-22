@@ -42,6 +42,8 @@ import java.util.stream.Stream;
 import static acmi.l2.clientmod.io.ReflectionUtil.fieldGet;
 
 public abstract class Token {
+    private static final Map<Class<? extends Token>, Sizer> SIZERS = new HashMap<>();
+
     protected abstract int getOpcode();
 
     protected void writeOpcode(DataOutput output, int opcode) throws UncheckedIOException {
@@ -55,13 +57,12 @@ public abstract class Token {
 
     public abstract String toString(UnrealRuntimeContext context);
 
-    private static Map<Class<? extends Token>, Sizer> sizers = new HashMap<>();
-
     protected Sizer getSizer() {
-        if (!sizers.containsKey(getClass())) {
-            sizers.put(getClass(), createSizer(getClass()));
+        Sizer sizer = SIZERS.get(getClass());
+        if (sizer == null) {
+            SIZERS.put(getClass(), sizer = createSizer(getClass()));
         }
-        return sizers.get(getClass());
+        return sizer;
     }
 
     private static Sizer createSizer(Class<? extends Token> clazz) {
@@ -99,11 +100,12 @@ public abstract class Token {
         }
     }
 
+    @SuppressWarnings("unchecked")
     public int getSize(BytecodeContext context) {
         return getSizer().getSize(this, context);
     }
 
-    interface Sizer {
-        int getSize(Token token, BytecodeContext context);
+    interface Sizer<T extends Token> {
+        int getSize(T token, BytecodeContext context);
     }
 }

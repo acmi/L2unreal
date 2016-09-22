@@ -53,6 +53,6 @@ public class Skip extends Token {
 
     @Override
     public String toString(UnrealRuntimeContext context) {
-        return toString(); //TODO
+        return "";
     }
 }

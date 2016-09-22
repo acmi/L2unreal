@@ -48,7 +48,7 @@ public class Assert extends Token {
     public String toString() {
         return "Assert("
                 + lineNumber
-                + "," + expression
+                + ", " + expression
                 + ')';
     }
 

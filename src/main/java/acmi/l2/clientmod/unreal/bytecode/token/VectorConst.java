@@ -53,6 +53,6 @@ public class VectorConst extends Token {
 
     @Override
     public String toString(UnrealRuntimeContext context) {
-        return "vect(" + x + "," + y + "," + z + ")";
+        return "vect(" + x + ", " + y + ", " + z + ")";
     }
 }

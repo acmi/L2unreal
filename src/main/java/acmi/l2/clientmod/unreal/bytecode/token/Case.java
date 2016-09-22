@@ -69,14 +69,14 @@ public class Case extends Token {
             output.write(condition);
     }
 
-    private static final Sizer sizer =
+    private static final Sizer<Case> sizer =
             (token, context) -> 1 +                              //opcode
                     2 +                                          //nextOffset
-                    (((Case) token).condition != null ?          //condition
-                            ((Case) token).condition.getSize(context) : 0);
+                    (token.condition != null ?                   //condition
+                            token.condition.getSize(context) : 0);
 
     @Override
-    protected Sizer getSizer() {
+    protected Sizer<Case> getSizer() {
         return sizer;
     }
 
@@ -84,7 +84,7 @@ public class Case extends Token {
     public String toString() {
         return "Case("
                 + String.format("0x%04x", nextOffset)
-                + "," + condition
+                + ", " + condition
                 + ')';
     }
 

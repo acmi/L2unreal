@@ -56,12 +56,11 @@ public class FinalFunction extends Token {
     public String toString() {
         return "FinalFunction("
                 + funcRef
-                + (params == null || params.length == 0 ? "" : ", " + Arrays.stream(params).map(Objects::toString).collect(Collectors.joining(", ")))
-                + ')';
+                + (params == null || params.length == 0 ? ")" : Arrays.stream(params).map(Objects::toString).collect(Collectors.joining(", ", ", ", ")")));
     }
 
     @Override
     public String toString(UnrealRuntimeContext context) {
-        return context.getUnrealPackage().objectReference(funcRef).getObjectName().getName() + "(" + Arrays.stream(params).map(p -> p.toString(context)).collect(Collectors.joining(",")) + ")";
+        return context.getUnrealPackage().objectReference(funcRef).getObjectName().getName() + "(" + Arrays.stream(params).map(p -> p.toString(context)).collect(Collectors.joining(", ")) + ")";
     }
 }

@@ -56,12 +56,11 @@ public class GlobalFunction extends Token {
     public String toString() {
         return "GlobalFunction("
                 + nameRef
-                + (params == null || params.length == 0 ? "" : ", " + Arrays.stream(params).map(Objects::toString).collect(Collectors.joining(", ")))
-                + ')';
+                + (params == null || params.length == 0 ? ")" : Arrays.stream(params).map(Objects::toString).collect(Collectors.joining(", ", ", ", ")")));
     }
 
     @Override
     public String toString(UnrealRuntimeContext context) {
-        return "Global." + context.getUnrealPackage().nameReference(nameRef) + "(" + Arrays.stream(params).map(p -> p.toString(context)).collect(Collectors.joining(",")) + ")";
+        return "Global." + context.getUnrealPackage().nameReference(nameRef) + "(" + Arrays.stream(params).map(p -> p.toString(context)).collect(Collectors.joining(", ")) + ")";
     }
 }

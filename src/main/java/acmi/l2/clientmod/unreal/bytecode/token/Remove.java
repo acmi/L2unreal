@@ -55,6 +55,6 @@ public class Remove extends Token {
 
     @Override
     public String toString(UnrealRuntimeContext context) {
-        return value.toString(context) + ".Remove(" + index.toString(context) + "," + length + ")";
+        return value.toString(context) + ".Remove(" + index.toString(context) + ", " + length + ")";
     }
 }

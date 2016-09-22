@@ -58,6 +58,6 @@ public class New extends Token {
 
     @Override
     public String toString(UnrealRuntimeContext context) {
-        return "New(" + outer.toString(context) + "," + name.toString(context) + "," + flags.toString(context) + ") " + clazz.toString(context);
+        return "New(" + outer.toString(context) + ", " + name.toString(context) + ", " + flags.toString(context) + ") " + clazz.toString(context);
     }
 }

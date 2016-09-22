@@ -46,7 +46,7 @@ public class ArrayElement extends Token {
     public String toString() {
         return "ArrayElement("
                 + index
-                + "," + array
+                + ", " + array
                 + ')';
     }
 

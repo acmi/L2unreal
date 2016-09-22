@@ -80,14 +80,14 @@ public class LabelTable extends Token {
         output.write(new Label(TokenSerializerFactory.getNoneInd(output.getContext()), 0xffff, 0));
     }
 
-    private static final Sizer sizer =
+    private static final Sizer<LabelTable> sizer =
             (token, context) -> 1 +
-                    Arrays.stream(((LabelTable) token).labels)
+                    Arrays.stream(token.labels)
                             .mapToInt(l -> 8).sum() +
                     8;
 
     @Override
-    protected Sizer getSizer() {
+    protected Sizer<LabelTable> getSizer() {
         return sizer;
     }
 
