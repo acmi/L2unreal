@@ -21,7 +21,6 @@
  */
 package acmi.l2.clientmod.unreal;
 
-import acmi.l2.clientmod.crypt.CryptoException;
 import acmi.l2.clientmod.crypt.L2Crypt;
 import acmi.l2.clientmod.crypt.rsa.L2Ver41x;
 import acmi.l2.clientmod.crypt.rsa.L2Ver41xInputStream;
@@ -32,6 +31,7 @@ import acmi.l2.clientmod.io.UnrealPackage;
 import org.apache.commons.io.FilenameUtils;
 
 import java.io.*;
+import java.math.BigInteger;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -61,22 +61,23 @@ public class Environment implements Env {
         try (InputStream bis = new BufferedInputStream(new FileInputStream(ini))) {
             InputStream is = bis;
             bis.mark(28);
-            try {
-                if (L2Crypt.readHeader(bis) == 413) {
-                    bis.mark(128);
-                    try {
-                        L2Ver41xInputStream orig = new L2Ver41xInputStream(bis, L2Ver41x.MODULUS_413, L2Ver41x.PRIVATE_EXPONENT_413);
-                        //noinspection ResultOfMethodCallIgnored
-                        orig.read();
-                        is = orig;
-                    } catch (Exception e) {
-                        bis.reset();
-                        is = new L2Ver41xInputStream(bis, L2Ver41x.MODULUS_L2ENCDEC, L2Ver41x.PRIVATE_EXPONENT_L2ENCDEC);
-                    }
+            if (L2Crypt.readHeader(bis) == 413) {
+                BigInteger modulus = L2Ver41x.MODULUS_413;
+                BigInteger exponent = L2Ver41x.PRIVATE_EXPONENT_413;
+
+                bis.mark(128);
+                try {
+                    //noinspection ResultOfMethodCallIgnored
+                    new L2Ver41xInputStream(bis, modulus, exponent).read();
+                } catch (Exception e) {
+                    modulus = L2Ver41x.MODULUS_L2ENCDEC;
+                    exponent = L2Ver41x.PRIVATE_EXPONENT_L2ENCDEC;
                 }
-            } catch (CryptoException e) {
+
                 bis.reset();
-                log.fine(e.getMessage());
+                is = new L2Ver41xInputStream(bis, modulus, exponent);
+            } else {
+                bis.reset();
             }
 
             BufferedReader br = new BufferedReader(new InputStreamReader(is));
