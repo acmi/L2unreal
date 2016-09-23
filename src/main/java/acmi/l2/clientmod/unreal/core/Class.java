@@ -21,12 +21,20 @@
  */
 package acmi.l2.clientmod.unreal.core;
 
+import acmi.l2.clientmod.io.ObjectOutput;
 import acmi.l2.clientmod.io.annotation.Custom;
+import acmi.l2.clientmod.io.annotation.WriteMethod;
 import acmi.l2.clientmod.unreal.UUIDSerializer;
+import acmi.l2.clientmod.unreal.UnrealRuntimeContext;
 import acmi.l2.clientmod.unreal.annotation.NameRef;
 import acmi.l2.clientmod.unreal.annotation.ObjectRef;
+import acmi.l2.clientmod.unreal.properties.PropertiesUtil;
 
+import java.util.Arrays;
+import java.util.Optional;
 import java.util.UUID;
+
+import static acmi.l2.clientmod.io.ByteUtil.uuidToBytes;
 
 public class Class extends State {
     public int classFlags;
@@ -47,5 +55,23 @@ public class Class extends State {
         public acmi.l2.clientmod.unreal.core.Class clazz;
         public int deep;
         public int scriptTextCRC;
+    }
+
+    @WriteMethod
+    public final void writeClass(ObjectOutput<UnrealRuntimeContext> output) {
+        output.writeInt(classFlags);
+        output.writeBytes(uuidToBytes(classUuid));
+        Dependency[] dependencies = Optional.ofNullable(this.dependencies).orElse(new Dependency[0]);
+        output.writeCompactInt(dependencies.length);
+        Arrays.stream(dependencies).forEach(output::write);
+        String[] packageImports = Optional.ofNullable(this.packageImports).orElse(new String[0]);
+        output.writeCompactInt(packageImports.length);
+        Arrays.stream(packageImports).mapToInt(n -> output.getContext().getUnrealPackage().nameReference(n)).forEach(output::writeCompactInt);
+        output.writeCompactInt(Optional.ofNullable(classWithin).map(o -> output.getContext().getUnrealPackage().objectReferenceByName(o.entry.getObjectFullName(), c -> c.equalsIgnoreCase(o.entry.getFullClassName()))).orElse(0));
+        output.writeCompactInt(output.getContext().getUnrealPackage().nameReference(classConfigName));
+        String[] hideCategories = Optional.ofNullable(this.hideCategories).orElse(new String[0]);
+        output.writeCompactInt(hideCategories.length);
+        Arrays.stream(hideCategories).mapToInt(n -> output.getContext().getUnrealPackage().nameReference(n)).forEach(output::writeCompactInt);
+        PropertiesUtil.writeProperties(output, properties);
     }
 }
