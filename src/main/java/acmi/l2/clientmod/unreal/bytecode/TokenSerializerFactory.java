@@ -231,7 +231,10 @@ public class TokenSerializerFactory extends ReflectionSerializerFactory<Bytecode
         register(FloatToByte.class);       //43
         register(FloatToInt.class);        //44
         register(FloatToBool.class);       //45
-
+        register(StringToName.class);      //46
+        register(ObjectToBool.class);      //47
+        register(NameToBool.class);        //48
+        register(StringToByte.class);      //49
         register(StringToInt.class);       //4a
         register(StringToBool.class);      //4b
         register(StringToFloat.class);     //4c
