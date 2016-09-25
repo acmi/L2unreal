@@ -76,6 +76,10 @@ public class UnrealSerializerFactory extends ReflectionSerializerFactory<UnrealR
 
     private Env environment;
 
+    private ExecutorService executorService = Executors.newSingleThreadExecutor(r -> new Thread(null, r, LOAD_THREAD_NAME, LOAD_THREAD_STACK_SIZE) {{
+        setDaemon(true);
+    }});
+
     public UnrealSerializerFactory(Env environment) {
         this.environment = new EnvironmentWrapper(environment);
     }
@@ -114,9 +118,7 @@ public class UnrealSerializerFactory extends ReflectionSerializerFactory<UnrealR
                     if (LOAD_THREAD_NAME.equals(Thread.currentThread().getName())) {
                         load.run();
                     } else {
-                        ExecutorService executorService = Executors.newSingleThreadExecutor(r -> new Thread(null, r, LOAD_THREAD_NAME, LOAD_THREAD_STACK_SIZE));
                         executorService.submit(load).get();
-                        executorService.shutdown();
                     }
                 } else {
                     create(packageLocalEntry.getObjectFullName(), packageLocalEntry.getFullClassName());
