@@ -33,6 +33,8 @@ import org.apache.commons.io.FilenameUtils;
 import java.io.*;
 import java.math.BigInteger;
 import java.util.*;
+import java.util.function.BinaryOperator;
+import java.util.function.Predicate;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
@@ -51,6 +53,8 @@ public class Environment implements Env {
 
     private Map<String, List<File>> fileCache = new HashMap<>();
     private Map<File, UnrealPackage> pckgCache = new HashMap<>();
+    private Map<UnrealPackage, Map<String, UnrealPackage.ExportEntry[]>> entriesCache = new HashMap<>();
+    private Map<UnrealPackage, Map<String, UnrealPackage.ExportEntry[]>> entriesCache2 = new HashMap<>();
 
     public Environment(File startDir, List<String> paths) {
         this.startDir = startDir;
@@ -123,7 +127,17 @@ public class Environment implements Env {
             log.fine("Loading " + f.getPath());
 
             try (RandomAccess ra = createRandomAccess(f)) {
-                pckgCache.put(f, new UnrealPackage(ra));
+                UnrealPackage up = new UnrealPackage(ra);
+                pckgCache.put(f, up);
+
+                BinaryOperator<UnrealPackage.ExportEntry[]> bo = (exportEntries, exportEntries2) -> {
+                    UnrealPackage.ExportEntry[] res = new UnrealPackage.ExportEntry[exportEntries.length + exportEntries2.length];
+                    System.arraycopy(exportEntries, 0, res, 0, exportEntries.length);
+                    System.arraycopy(exportEntries2, 0, res, exportEntries.length, exportEntries2.length);
+                    return res;
+                };
+                entriesCache.put(up, up.getExportTable().stream().collect(Collectors.toMap(e -> e.getObjectFullName().toLowerCase(), e -> new UnrealPackage.ExportEntry[]{e}, bo)));
+                entriesCache2.put(up, up.getExportTable().stream().collect(Collectors.toMap(e -> e.getObjectName().getName().toLowerCase(), e -> new UnrealPackage.ExportEntry[]{e}, bo)));
             } catch (Exception e) {
                 log.log(Level.WARNING, e, () -> String.format("Couldn't load %s", f.getPath()));
             }
@@ -133,9 +147,30 @@ public class Environment implements Env {
     }
 
     @Override
+    public Optional<UnrealPackage.ExportEntry> getExportEntry(String fullName, Predicate<String> fullClassName) throws UncheckedIOException {
+        String[] path = fullName.split("\\.");
+        Optional<UnrealPackage.ExportEntry> entryOptional = listPackages(path[0])
+                .map(up -> entriesCache.get(up))
+                .map(map -> map.getOrDefault(fullName.toLowerCase(), new UnrealPackage.ExportEntry[0]))
+                .flatMap(Arrays::stream)
+                .filter(e -> fullClassName.test(e.getFullClassName()))
+                .findAny();
+        if (!entryOptional.isPresent())
+            entryOptional = listPackages(path[0])
+                    .map(up -> entriesCache2.get(up))
+                    .map(map -> map.getOrDefault(path[path.length - 1].toLowerCase(), new UnrealPackage.ExportEntry[0]))
+                    .flatMap(Arrays::stream)
+                    .filter(e -> fullClassName.test(e.getFullClassName()))
+                    .findAny();
+        return entryOptional;
+    }
+
+    @Override
     public void markInvalid(String pckg) {
         getPackage(pckg).forEach(file -> {
-            pckgCache.remove(file);
+            UnrealPackage toRemove = pckgCache.remove(file);
+            entriesCache.remove(toRemove);
+            entriesCache2.remove(toRemove);
 
             log.fine("Remove from cache " + file.getPath());
         });
