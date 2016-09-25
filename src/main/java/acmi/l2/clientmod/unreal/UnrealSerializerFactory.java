@@ -435,6 +435,21 @@ public class UnrealSerializerFactory extends ReflectionSerializerFactory<UnrealR
             return stream;
         }
 
+        @Override
+        public Stream<File> listFiles() {
+            return environment.listFiles();
+        }
+
+        @Override
+        public Stream<File> getPackage(String name) {
+            return environment.getPackage(name);
+        }
+
+        @Override
+        public Optional<UnrealPackage.ExportEntry> getExportEntry(String fullName, Predicate<String> fullClassName) throws UncheckedIOException {
+            return environment.getExportEntry(fullName, fullClassName);
+        }
+
         private Stream<UnrealPackage> appendCustomPackage(Stream<UnrealPackage> stream, String name) {
             name = canonizeName(name);
             if (!adds.containsKey(name)) {
