@@ -9,7 +9,7 @@ public class DefaultVariable extends Token {
 
     @Compact
     @ObjectRef
-    private int objRef;
+    public int objRef;
 
     public DefaultVariable(int objRef) {
         this.objRef = objRef;
