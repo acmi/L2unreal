@@ -3,7 +3,7 @@
   <groupId>acmi.l2.clientmod</groupId>
   <artifactId>l2unreal</artifactId>
   <versioning>
-    <release>1.3.6</release>
+    <release>1.3.7</release>
     <versions>
       <version>1.0</version>
       <version>1.0.1</version>
@@ -16,7 +16,8 @@
       <version>1.3.4</version>
       <version>1.3.5</version>
       <version>1.3.6</version>
+      <version>1.3.7</version>
     </versions>
-    <lastUpdated>20160923100000</lastUpdated>
+    <lastUpdated>20160925140000</lastUpdated>
   </versioning>
 </metadata>
