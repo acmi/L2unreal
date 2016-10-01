@@ -426,13 +426,7 @@ public class UnrealSerializerFactory extends ReflectionSerializerFactory<UnrealR
 
         @Override
         public Stream<UnrealPackage> listPackages(String name) {
-            Stream<UnrealPackage> stream = environment.listPackages(name);
-
-            if (name.equalsIgnoreCase("Engine") || name.equalsIgnoreCase("Core")) {
-                stream = appendCustomPackage(stream, name);
-            }
-
-            return stream;
+            return appendCustomPackage(environment.listPackages(name), name);
         }
 
         @Override
@@ -447,10 +441,24 @@ public class UnrealSerializerFactory extends ReflectionSerializerFactory<UnrealR
 
         @Override
         public Optional<UnrealPackage.ExportEntry> getExportEntry(String fullName, Predicate<String> fullClassName) throws UncheckedIOException {
+            String[] path = fullName.split("\\.");
+
+            Optional<UnrealPackage.ExportEntry> entryOptional = appendCustomPackage(Stream.empty(), path[0])
+                    .map(UnrealPackage::getExportTable)
+                    .flatMap(Collection::stream)
+                    .filter(e -> e.getObjectFullName().equalsIgnoreCase(fullName))
+                    .filter(e -> fullClassName.test(e.getFullClassName()))
+                    .findAny();
+            if (entryOptional.isPresent())
+                return entryOptional;
+
             return environment.getExportEntry(fullName, fullClassName);
         }
 
         private Stream<UnrealPackage> appendCustomPackage(Stream<UnrealPackage> stream, String name) {
+            if (!name.equalsIgnoreCase("Engine") && !name.equalsIgnoreCase("Core"))
+                return stream;
+
             name = canonizeName(name);
             if (!adds.containsKey(name)) {
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
