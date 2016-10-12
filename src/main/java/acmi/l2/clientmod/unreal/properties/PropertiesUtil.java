@@ -27,18 +27,20 @@ import acmi.l2.clientmod.unreal.UnrealRuntimeContext;
 import acmi.l2.clientmod.unreal.UnrealSerializerFactory;
 import acmi.l2.clientmod.unreal.core.*;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.lang.Class;
 import java.lang.Object;
 import java.util.*;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 public class PropertiesUtil {
+    private static final Logger log = Logger.getLogger(PropertiesUtil.class.getName());
+
     public static List<L2Property> readProperties(ObjectInput<UnrealRuntimeContext> objectInput, String objClass) throws UnrealException {
         List<L2Property> properties = new ArrayList<>();
 
@@ -62,9 +64,6 @@ public class PropertiesUtil {
                 int size = readPropertySize(sizeType, objectInput);
                 int arrayIndex = array && propertyType != Type.BOOL ? objectInput.readCompactInt() : 0;
 
-                byte[] objBytes = new byte[size];
-                objectInput.readFully(objBytes);
-
                 final String n = name;
                 L2Property property = PropertiesUtil.getAt(properties, n);
                 if (property == null) {
@@ -72,25 +71,30 @@ public class PropertiesUtil {
                             .filter(pt -> pt.entry.getObjectName().getName().equalsIgnoreCase((n)))
                             .filter(pt -> match(pt.getClass(), propertyType))
                             .findAny()
-                            .orElseThrow(() -> new UnrealException(objClass + ": Property template not found: " + n));
-
-                    property = new L2Property(template);
-                    properties.add(property);
+                            .orElse(null);
+                    if (template == null) {
+                        log.warning(() -> objClass + ": Property template not found: " + n);
+                    } else {
+                        property = new L2Property(template);
+                        properties.add(property);
+                    }
                 }
 
-                Struct struct = null;
-                if (propertyType == Type.STRUCT) {
-                    StructProperty structProperty = (StructProperty) property.getTemplate();
-                    struct = structProperty.struct;
+                if (property != null) {
+                    Struct struct = null;
+                    if (propertyType == Type.STRUCT) {
+                        StructProperty structProperty = (StructProperty) property.getTemplate();
+                        struct = structProperty.struct;
+                    }
+                    Property arrayInner = null;
+                    if (propertyType.equals(Type.ARRAY)) {
+                        ArrayProperty arrayProperty = (ArrayProperty) property.getTemplate();
+                        arrayInner = arrayProperty.inner;
+                    }
+                    property.putAt(arrayIndex, read(objectInput, propertyType, array, arrayInner, struct));
+                } else {
+                    objectInput.skip(size);
                 }
-                Property arrayInner = null;
-                if (propertyType.equals(Type.ARRAY)) {
-                    ArrayProperty arrayProperty = (ArrayProperty) property.getTemplate();
-                    arrayInner = arrayProperty.inner;
-                }
-
-                ObjectInput<UnrealRuntimeContext> objBuffer = new ObjectInputStream<>(new ByteArrayInputStream(objBytes), objectInput.getCharset(), objectInput.getSerializerFactory(), objectInput.getContext());
-                property.putAt(arrayIndex, read(objBuffer, propertyType, array, arrayInner, struct));
             }
         } catch (UnrealException e) {
             throw e;
