@@ -216,6 +216,7 @@ public class TokenSerializerFactory extends ReflectionSerializerFactory<Bytecode
 
         register(DelegateName.class);      //44
 
+        register(INT64Const.class);        //46
         register(DynArraySort.class);      //47
 
         //Conversion
