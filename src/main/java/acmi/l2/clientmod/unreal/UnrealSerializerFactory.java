@@ -70,7 +70,7 @@ public class UnrealSerializerFactory extends ReflectionSerializerFactory<UnrealR
             c.equalsIgnoreCase("Core.State") ||
             c.equalsIgnoreCase("Core.Class");
 
-    private Map<UnrealPackage.Entry, Object> objects = new HashMap<>();
+    private Map<String, Object> objects = new HashMap<>();
     private Map<Integer, acmi.l2.clientmod.unreal.core.Function> nativeFunctions = new HashMap<>();
     private ObservableSet<String> loaded = FXCollections.observableSet(new HashSet<>());
 
@@ -104,7 +104,8 @@ public class UnrealSerializerFactory extends ReflectionSerializerFactory<UnrealR
         if (packageLocalEntry == null)
             return null;
 
-        if (!objects.containsKey(packageLocalEntry)) {
+        String key = keyFor(packageLocalEntry);
+        if (!objects.containsKey(key)) {
             log.finest(() -> String.format("Loading %s", packageLocalEntry));
 
             UnrealPackage.ExportEntry entry;
@@ -113,7 +114,7 @@ public class UnrealSerializerFactory extends ReflectionSerializerFactory<UnrealR
                 if (entry != null) {
                     Class<? extends Object> clazz = getClass(entry.getFullClassName());
                     Object obj = clazz.newInstance();
-                    objects.put(entry, obj);
+                    objects.put(key, obj);
                     Runnable load = () -> load(obj, entry);
                     if (LOAD_THREAD_NAME.equals(Thread.currentThread().getName())) {
                         load.run();
@@ -127,7 +128,11 @@ public class UnrealSerializerFactory extends ReflectionSerializerFactory<UnrealR
                 throw new IllegalStateException(e);
             }
         }
-        return objects.get(packageLocalEntry);
+        return objects.get(key);
+    }
+
+    private String keyFor(UnrealPackage.Entry entry) {
+        return (entry.getObjectFullName() + "_" + entry.getFullClassName()).toLowerCase();
     }
 
     private void create(String objName, String objClass) {
@@ -154,7 +159,7 @@ public class UnrealSerializerFactory extends ReflectionSerializerFactory<UnrealR
                 return null;
             }
         };
-        objects.put(entry, new acmi.l2.clientmod.unreal.core.Class() {
+        objects.put(keyFor(entry), new acmi.l2.clientmod.unreal.core.Class() {
             @Override
             public String getFullName() {
                 return objName;
@@ -248,7 +253,7 @@ public class UnrealSerializerFactory extends ReflectionSerializerFactory<UnrealR
                 ObjectOutput<BytecodeContext> output = ObjectOutput.objectOutput(dataOutput, serializerFactory, context);
                 Token[] array = (Token[]) getter.apply(object);
                 output.writeInt(array.length);
-                for (Token token : array)
+                for (Token token: array)
                     output.write(token);
             });
         } else {
