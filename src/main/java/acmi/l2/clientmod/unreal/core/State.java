@@ -21,6 +21,10 @@
  */
 package acmi.l2.clientmod.unreal.core;
 
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.stream.Collectors;
+
 import acmi.l2.clientmod.io.annotation.UShort;
 
 public class State extends Struct {
@@ -48,6 +52,23 @@ public class State extends Struct {
 
         Flags(int mask) {
             this.mask = mask;
+        }
+
+        public int getMask() {
+            return mask;
+        }
+
+        public static Collection<Flags> getFlags(int flags) {
+            return Arrays.stream(values())
+                    .filter(e -> (e.getMask() & flags) != 0)
+                    .collect(Collectors.toList());
+        }
+
+        public static int getFlags(Flags... flags) {
+            int v = 0;
+            for (Flags flag : flags)
+                v |= flag.getMask();
+            return v;
         }
 
         @Override
