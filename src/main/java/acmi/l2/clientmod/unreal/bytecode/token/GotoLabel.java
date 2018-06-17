@@ -22,18 +22,21 @@
 package acmi.l2.clientmod.unreal.bytecode.token;
 
 import acmi.l2.clientmod.unreal.UnrealRuntimeContext;
+import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
+@AllArgsConstructor
+@NoArgsConstructor
+@EqualsAndHashCode(callSuper = false)
+@Getter
+@Setter
 public class GotoLabel extends Token {
     public static final int OPCODE = 0x0d;
 
     public Token label;
-
-    public GotoLabel(Token label) {
-        this.label = label;
-    }
-
-    public GotoLabel() {
-    }
 
     @Override
     protected int getOpcode() {
@@ -49,6 +52,6 @@ public class GotoLabel extends Token {
 
     @Override
     public String toString(UnrealRuntimeContext context) {
-        return "goto '" + label.toString(context) + "'";
+        return "Goto(" + label.toString(context) + ")";
     }
 }

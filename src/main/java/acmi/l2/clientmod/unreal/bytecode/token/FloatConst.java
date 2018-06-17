@@ -22,20 +22,23 @@
 package acmi.l2.clientmod.unreal.bytecode.token;
 
 import acmi.l2.clientmod.unreal.UnrealRuntimeContext;
+import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.util.Locale;
 
+@AllArgsConstructor
+@NoArgsConstructor
+@EqualsAndHashCode(callSuper = false)
+@Getter
+@Setter
 public class FloatConst extends Token {
     public static final int OPCODE = 0x1e;
 
     public float value;
-
-    public FloatConst(float value) {
-        this.value = value;
-    }
-
-    public FloatConst() {
-    }
 
     @Override
     protected int getOpcode() {

@@ -23,21 +23,23 @@ package acmi.l2.clientmod.unreal.bytecode.token;
 
 import acmi.l2.clientmod.io.annotation.UShort;
 import acmi.l2.clientmod.unreal.UnrealRuntimeContext;
+import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
+@AllArgsConstructor
+@NoArgsConstructor
+@EqualsAndHashCode(callSuper = false)
+@Getter
+@Setter
 public class Assert extends Token {
     public static final int OPCODE = 0x09;
 
     @UShort
     public int lineNumber;
     public Token expression;
-
-    public Assert(int lineNumber, Token expression) {
-        this.lineNumber = lineNumber;
-        this.expression = expression;
-    }
-
-    public Assert() {
-    }
 
     @Override
     protected int getOpcode() {
@@ -54,6 +56,6 @@ public class Assert extends Token {
 
     @Override
     public String toString(UnrealRuntimeContext context) {
-        return "assert " + expression.toString(context);
+        return "assert(" + expression.toString(context) + ")";
     }
 }

@@ -21,23 +21,27 @@
  */
 package acmi.l2.clientmod.unreal.bytecode.token;
 
+import acmi.l2.clientmod.io.UnrealPackage;
 import acmi.l2.clientmod.io.annotation.Compact;
 import acmi.l2.clientmod.unreal.UnrealRuntimeContext;
 import acmi.l2.clientmod.unreal.annotation.ObjectRef;
+import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
+@AllArgsConstructor
+@NoArgsConstructor
+@EqualsAndHashCode(callSuper = false)
+@Getter
+@Setter
 public class ObjectConst extends Token {
     public static final int OPCODE = 0x20;
 
     @Compact
     @ObjectRef
     public int objRef;
-
-    public ObjectConst(int objRef) {
-        this.objRef = objRef;
-    }
-
-    public ObjectConst() {
-    }
 
     @Override
     protected int getOpcode() {
@@ -53,6 +57,11 @@ public class ObjectConst extends Token {
 
     @Override
     public String toString(UnrealRuntimeContext context) {
-        return context.getUnrealPackage().objectReference(objRef).getObjectName().getName(); //TODO type
+        UnrealPackage.Entry reference = context.getUnrealPackage().objectReference(objRef);
+        String s = reference.getObjectName().getName();
+        if ("Core.Class".equalsIgnoreCase(reference.getFullClassName())) {
+            s = "class'" + s + "'";
+        }
+        return s;
     }
 }

@@ -21,8 +21,22 @@
  */
 package acmi.l2.clientmod.unreal.bytecode.token;
 
-import acmi.l2.clientmod.unreal.UnrealRuntimeContext;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
+import acmi.l2.clientmod.unreal.UnrealRuntimeContext;
+import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+@AllArgsConstructor
+@NoArgsConstructor
+@EqualsAndHashCode(callSuper = false)
+@Getter
+@Setter
 public class New extends Token {
     public static final int OPCODE = 0x11;
 
@@ -30,16 +44,6 @@ public class New extends Token {
     public Token name;
     public Token flags;
     public Token clazz;
-
-    public New(Token outer, Token name, Token flags, Token clazz) {
-        this.outer = outer;
-        this.name = name;
-        this.flags = flags;
-        this.clazz = clazz;
-    }
-
-    public New() {
-    }
 
     @Override
     protected int getOpcode() {
@@ -58,6 +62,14 @@ public class New extends Token {
 
     @Override
     public String toString(UnrealRuntimeContext context) {
-        return "New(" + outer.toString(context) + ", " + name.toString(context) + ", " + flags.toString(context) + ") " + clazz.toString(context);
+        String s = "new ";
+        List<Token> params = Stream.of(outer, name, flags)
+                .filter(it -> !(it instanceof Nothing))
+                .collect(Collectors.toList());
+        if (!params.isEmpty()) {
+            s += params.stream().map(it -> it.toString(context)).collect(Collectors.joining(", ", "(", ") "));
+        }
+        s += clazz.toString(context);
+        return s;
     }
 }

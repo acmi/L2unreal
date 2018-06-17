@@ -21,15 +21,24 @@
  */
 package acmi.l2.clientmod.unreal.bytecode.token;
 
+import acmi.l2.clientmod.io.UnrealPackage;
 import acmi.l2.clientmod.io.annotation.Compact;
 import acmi.l2.clientmod.unreal.UnrealRuntimeContext;
 import acmi.l2.clientmod.unreal.annotation.ObjectRef;
 import acmi.l2.clientmod.unreal.bytecode.token.annotation.FunctionParams;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+@NoArgsConstructor
+@EqualsAndHashCode(callSuper = false)
+@Getter
+@Setter
 public class FinalFunction extends Token {
     public static final int OPCODE = 0x1c;
 
@@ -42,9 +51,6 @@ public class FinalFunction extends Token {
     public FinalFunction(int funcRef, Token... params) {
         this.funcRef = funcRef;
         this.params = params;
-    }
-
-    public FinalFunction() {
     }
 
     @Override
@@ -61,6 +67,18 @@ public class FinalFunction extends Token {
 
     @Override
     public String toString(UnrealRuntimeContext context) {
-        return context.getUnrealPackage().objectReference(funcRef).getObjectName().getName() + "(" + Arrays.stream(params).map(p -> p.toString(context)).collect(Collectors.joining(", ")) + ")";
+        UnrealPackage.Entry func = context.getUnrealPackage().objectReference(funcRef);
+        String pref = "";
+
+        if (context.getSerializer() != null) {
+            UnrealPackage.Entry entryHolder = context.getEntry().getObjectPackage();
+            UnrealPackage.Entry funcHolder = func.getObjectPackage();
+            if (!Objects.equals(entryHolder.getObjectFullName(), funcHolder.getObjectFullName()) &&
+                    context.getSerializer().isSubclass(funcHolder.getObjectFullName(), entryHolder.getObjectFullName())) {
+                pref = "Super.";
+            }
+        }
+
+        return pref + func.getObjectName().getName() + "(" + Arrays.stream(params).map(p -> p.toString(context)).collect(Collectors.joining(", ")) + ")";
     }
 }

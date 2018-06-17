@@ -22,12 +22,17 @@
 package acmi.l2.clientmod.unreal.bytecode.token;
 
 import acmi.l2.clientmod.unreal.UnrealRuntimeContext;
+import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
 
+@AllArgsConstructor
+@EqualsAndHashCode(callSuper = false)
+@Getter
+@Setter
 public class IteratorPop extends Token {
     public static final int OPCODE = 0x30;
-
-    public IteratorPop() {
-    }
 
     @Override
     protected int getOpcode() {
@@ -41,6 +46,6 @@ public class IteratorPop extends Token {
 
     @Override
     public String toString(UnrealRuntimeContext context) {
-        return "";
+        return "/* IteratorPop */";
     }
 }

@@ -32,6 +32,11 @@ import acmi.l2.clientmod.unreal.annotation.NameRef;
 import acmi.l2.clientmod.unreal.annotation.Offset;
 import acmi.l2.clientmod.unreal.bytecode.BytecodeContext;
 import acmi.l2.clientmod.unreal.bytecode.TokenSerializerFactory;
+import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -41,6 +46,10 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+@NoArgsConstructor
+@EqualsAndHashCode(callSuper = false)
+@Getter
+@Setter
 public class LabelTable extends Token {
     public static final int OPCODE = 0x0c;
 
@@ -50,16 +59,13 @@ public class LabelTable extends Token {
         this.labels = labels;
     }
 
-    public LabelTable() {
-    }
-
     @Override
     protected int getOpcode() {
         return OPCODE;
     }
 
     @ReadMethod
-    public void readFrom(ObjectInput<BytecodeContext> input) throws IOException {
+    public void readFrom(ObjectInput<BytecodeContext> input) {
         List<Label> labels = new ArrayList<>();
         Label tmp;
         do {
@@ -68,7 +74,7 @@ public class LabelTable extends Token {
                 break;
             labels.add(tmp);
         } while (true);
-        this.labels = labels.toArray(new Label[labels.size()]);
+        this.labels = labels.toArray(new Label[0]);
     }
 
     @WriteMethod
@@ -98,6 +104,11 @@ public class LabelTable extends Token {
                 + ')';
     }
 
+    @AllArgsConstructor
+    @NoArgsConstructor
+    @EqualsAndHashCode(callSuper = false)
+    @Getter
+    @Setter
     public static class Label {
         @Compact
         @NameRef
@@ -108,20 +119,12 @@ public class LabelTable extends Token {
         @UShort
         public int unk;
 
-        public Label(int nameRef, int offset, int unk) {
-            this.nameRef = nameRef;
-            this.offset = offset;
-            this.unk = unk;
-        }
-
-        public Label() {
-        }
-
         @Override
         public String toString() {
             return "Label("
                     + nameRef
                     + ", " + String.format("0x%04x", offset)
+                    + ", " + unk
                     + ')';
         }
     }

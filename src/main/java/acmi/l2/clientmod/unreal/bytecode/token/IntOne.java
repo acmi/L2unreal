@@ -22,12 +22,17 @@
 package acmi.l2.clientmod.unreal.bytecode.token;
 
 import acmi.l2.clientmod.unreal.UnrealRuntimeContext;
+import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
 
+@AllArgsConstructor
+@EqualsAndHashCode(callSuper = false)
+@Getter
+@Setter
 public class IntOne extends Token {
     public static final int OPCODE = 0x26;
-
-    public IntOne() {
-    }
 
     @Override
     protected int getOpcode() {

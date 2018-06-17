@@ -22,20 +22,21 @@
 package acmi.l2.clientmod.unreal.bytecode.token;
 
 import acmi.l2.clientmod.unreal.UnrealRuntimeContext;
+import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
+@AllArgsConstructor
+@NoArgsConstructor
+@EqualsAndHashCode(callSuper = false)
+@Getter
+@Setter
 public class RotatorConst extends Token {
     public static final int OPCODE = 0x22;
 
     public int pitch, yaw, roll;
-
-    public RotatorConst(int pitch, int yaw, int roll) {
-        this.pitch = pitch;
-        this.yaw = yaw;
-        this.roll = roll;
-    }
-
-    public RotatorConst() {
-    }
 
     @Override
     protected int getOpcode() {

@@ -1,7 +1,15 @@
 package acmi.l2.clientmod.unreal.bytecode.token;
 
 import acmi.l2.clientmod.unreal.UnrealRuntimeContext;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
+@NoArgsConstructor
+@EqualsAndHashCode(callSuper = false)
+@Getter
+@Setter
 public class INT64Const extends Token {
     public static final int OPCODE = 0x46;
 
@@ -11,9 +19,6 @@ public class INT64Const extends Token {
     public INT64Const(long value) {
         this.h = (int) (value >> 32);
         this.l = (int) value;
-    }
-
-    public INT64Const() {
     }
 
     public long getValue() {

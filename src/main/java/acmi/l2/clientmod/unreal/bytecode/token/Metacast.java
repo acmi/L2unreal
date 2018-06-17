@@ -24,7 +24,17 @@ package acmi.l2.clientmod.unreal.bytecode.token;
 import acmi.l2.clientmod.io.annotation.Compact;
 import acmi.l2.clientmod.unreal.UnrealRuntimeContext;
 import acmi.l2.clientmod.unreal.annotation.ObjectRef;
+import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
+@AllArgsConstructor
+@NoArgsConstructor
+@EqualsAndHashCode(callSuper = false)
+@Getter
+@Setter
 public class Metacast extends Token {
     public static final int OPCODE = 0x13;
 
@@ -32,14 +42,6 @@ public class Metacast extends Token {
     @ObjectRef
     public int classRef;
     public Token value;
-
-    public Metacast(int classRef, Token value) {
-        this.classRef = classRef;
-        this.value = value;
-    }
-
-    public Metacast() {
-    }
 
     @Override
     protected int getOpcode() {

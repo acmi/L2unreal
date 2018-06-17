@@ -1,23 +1,25 @@
 package acmi.l2.clientmod.unreal.bytecode.token;
 
 import acmi.l2.clientmod.unreal.UnrealRuntimeContext;
+import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 /**
  * @since EToA Ep 04: Grand Crusade
  */
+@AllArgsConstructor
+@NoArgsConstructor
+@EqualsAndHashCode(callSuper = false)
+@Getter
+@Setter
 public class DynArraySort extends Token {
     public static final int OPCODE = 0x47;
 
     public Token array;
     public Token compareFunction;
-
-    public DynArraySort(Token array, Token compareFunction) {
-        this.array = array;
-        this.compareFunction = compareFunction;
-    }
-
-    public DynArraySort() {
-    }
 
     @Override
     protected int getOpcode() {

@@ -58,11 +58,7 @@ public abstract class Token {
     public abstract String toString(UnrealRuntimeContext context);
 
     protected Sizer getSizer() {
-        Sizer sizer = SIZERS.get(getClass());
-        if (sizer == null) {
-            SIZERS.put(getClass(), sizer = createSizer(getClass()));
-        }
-        return sizer;
+        return SIZERS.computeIfAbsent(getClass(), k -> createSizer(getClass()));
     }
 
     private static Sizer createSizer(Class<? extends Token> clazz) {

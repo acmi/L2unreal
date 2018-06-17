@@ -24,7 +24,17 @@ package acmi.l2.clientmod.unreal.bytecode.token;
 import acmi.l2.clientmod.io.annotation.UByte;
 import acmi.l2.clientmod.io.annotation.UShort;
 import acmi.l2.clientmod.unreal.UnrealRuntimeContext;
+import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
+@AllArgsConstructor
+@NoArgsConstructor
+@EqualsAndHashCode(callSuper = false)
+@Getter
+@Setter
 public class Context extends Token {
     public static final int OPCODE = 0x19;
 
@@ -34,16 +44,6 @@ public class Context extends Token {
     @UByte
     public int bSize;   //member call result size
     public Token member;
-
-    public Context(Token object, int wSkip, int bSize, Token member) {
-        this.object = object;
-        this.wSkip = wSkip;
-        this.bSize = bSize;
-        this.member = member;
-    }
-
-    public Context() {
-    }
 
     @Override
     protected int getOpcode() {

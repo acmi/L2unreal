@@ -23,21 +23,23 @@ package acmi.l2.clientmod.unreal.bytecode.token;
 
 import acmi.l2.clientmod.io.annotation.UByte;
 import acmi.l2.clientmod.unreal.UnrealRuntimeContext;
+import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
+@AllArgsConstructor
+@NoArgsConstructor
+@EqualsAndHashCode(callSuper = false)
+@Getter
+@Setter
 public class Switch extends Token {
     public static final int OPCODE = 0x05;
 
     @UByte
     public int offset;  //expression size (string->0 byte->1 int->4 int64->8)
     public Token expression;
-
-    public Switch(int offset, Token expression) {
-        this.offset = offset;
-        this.expression = expression;
-    }
-
-    public Switch() {
-    }
 
     @Override
     protected int getOpcode() {

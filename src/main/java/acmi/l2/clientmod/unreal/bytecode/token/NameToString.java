@@ -23,19 +23,22 @@ package acmi.l2.clientmod.unreal.bytecode.token;
 
 import acmi.l2.clientmod.unreal.UnrealRuntimeContext;
 import acmi.l2.clientmod.unreal.bytecode.token.annotation.ConversionToken;
+import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @ConversionToken
+@AllArgsConstructor
+@NoArgsConstructor
+@EqualsAndHashCode(callSuper = false)
+@Getter
+@Setter
 public class NameToString extends Token {
     public static final int OPCODE = 0x57;
 
     public Token value;
-
-    public NameToString(Token value) {
-        this.value = value;
-    }
-
-    public NameToString() {
-    }
 
     @Override
     protected int getOpcode() {

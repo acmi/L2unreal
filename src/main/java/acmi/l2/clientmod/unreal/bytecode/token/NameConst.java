@@ -24,20 +24,23 @@ package acmi.l2.clientmod.unreal.bytecode.token;
 import acmi.l2.clientmod.io.annotation.Compact;
 import acmi.l2.clientmod.unreal.UnrealRuntimeContext;
 import acmi.l2.clientmod.unreal.annotation.NameRef;
+import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
+@AllArgsConstructor
+@NoArgsConstructor
+@EqualsAndHashCode(callSuper = false)
+@Getter
+@Setter
 public class NameConst extends Token {
     public static final int OPCODE = 0x21;
 
     @Compact
     @NameRef
     public int nameRef;
-
-    public NameConst(int nameRef) {
-        this.nameRef = nameRef;
-    }
-
-    public NameConst() {
-    }
 
     @Override
     protected int getOpcode() {

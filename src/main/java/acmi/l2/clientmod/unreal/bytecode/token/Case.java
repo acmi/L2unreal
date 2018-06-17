@@ -29,9 +29,19 @@ import acmi.l2.clientmod.io.annotation.WriteMethod;
 import acmi.l2.clientmod.unreal.UnrealRuntimeContext;
 import acmi.l2.clientmod.unreal.annotation.Offset;
 import acmi.l2.clientmod.unreal.bytecode.BytecodeContext;
+import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.io.UncheckedIOException;
 
+@AllArgsConstructor
+@NoArgsConstructor
+@EqualsAndHashCode(callSuper = false)
+@Getter
+@Setter
 public class Case extends Token {
     public static final int OPCODE = 0x0a;
 
@@ -41,14 +51,6 @@ public class Case extends Token {
     @Offset
     public int nextOffset;
     public Token condition;
-
-    public Case(int nextOffset, Token condition) {
-        this.nextOffset = nextOffset;
-        this.condition = condition;
-    }
-
-    public Case() {
-    }
 
     @Override
     protected int getOpcode() {

@@ -24,7 +24,17 @@ package acmi.l2.clientmod.unreal.bytecode.token;
 import acmi.l2.clientmod.io.annotation.UShort;
 import acmi.l2.clientmod.unreal.UnrealRuntimeContext;
 import acmi.l2.clientmod.unreal.annotation.Offset;
+import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
+@AllArgsConstructor
+@NoArgsConstructor
+@EqualsAndHashCode(callSuper = false)
+@Getter
+@Setter
 public class Iterator extends Token {
     public static final int OPCODE = 0x2f;
 
@@ -32,14 +42,6 @@ public class Iterator extends Token {
     @UShort
     @Offset
     public int endOfLoopOffset;
-
-    public Iterator(Token expression, int endOfLoopOffset) {
-        this.expression = expression;
-        this.endOfLoopOffset = endOfLoopOffset;
-    }
-
-    public Iterator() {
-    }
 
     @Override
     protected int getOpcode() {

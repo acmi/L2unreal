@@ -22,22 +22,23 @@
 package acmi.l2.clientmod.unreal.bytecode.token;
 
 import acmi.l2.clientmod.unreal.UnrealRuntimeContext;
+import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
+@AllArgsConstructor
+@NoArgsConstructor
+@EqualsAndHashCode(callSuper = false)
+@Getter
+@Setter
 public class Insert extends Token {
     public static final int OPCODE = 0x40;
 
     public Token value;
     public Token index;
     public Token length;
-
-    public Insert(Token value, Token index, Token length) {
-        this.value = value;
-        this.index = index;
-        this.length = length;
-    }
-
-    public Insert() {
-    }
 
     @Override
     protected int getOpcode() {

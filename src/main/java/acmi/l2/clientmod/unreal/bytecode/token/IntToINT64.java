@@ -23,19 +23,22 @@ package acmi.l2.clientmod.unreal.bytecode.token;
 
 import acmi.l2.clientmod.unreal.UnrealRuntimeContext;
 import acmi.l2.clientmod.unreal.bytecode.token.annotation.ConversionToken;
+import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @ConversionToken
+@AllArgsConstructor
+@NoArgsConstructor
+@EqualsAndHashCode(callSuper = false)
+@Getter
+@Setter
 public class IntToINT64 extends Token {
     public static final int OPCODE = 0x5b;
 
     public Token value;
-
-    public IntToINT64(Token value) {
-        this.value = value;
-    }
-
-    public IntToINT64() {
-    }
 
     @Override
     protected int getOpcode() {

@@ -24,20 +24,23 @@ package acmi.l2.clientmod.unreal.bytecode.token;
 import acmi.l2.clientmod.io.annotation.UShort;
 import acmi.l2.clientmod.unreal.UnrealRuntimeContext;
 import acmi.l2.clientmod.unreal.annotation.Offset;
+import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
+@AllArgsConstructor
+@NoArgsConstructor
+@EqualsAndHashCode(callSuper = false)
+@Getter
+@Setter
 public class Jump extends Token {
     public static final int OPCODE = 0x06;
 
     @UShort
     @Offset
     public int targetOffset;
-
-    public Jump(int targetOffset) {
-        this.targetOffset = targetOffset;
-    }
-
-    public Jump() {
-    }
 
     @Override
     protected int getOpcode() {

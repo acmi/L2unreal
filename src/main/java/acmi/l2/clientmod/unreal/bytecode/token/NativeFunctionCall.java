@@ -4,6 +4,10 @@ import acmi.l2.clientmod.io.DataOutput;
 import acmi.l2.clientmod.unreal.UnrealRuntimeContext;
 import acmi.l2.clientmod.unreal.bytecode.token.annotation.FunctionParams;
 import acmi.l2.clientmod.unreal.core.Function;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.io.UncheckedIOException;
 import java.util.Arrays;
@@ -13,6 +17,10 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+@NoArgsConstructor
+@EqualsAndHashCode(callSuper = false)
+@Getter
+@Setter
 public class NativeFunctionCall extends Token {
     public transient int nativeIndex;
     @FunctionParams
@@ -21,9 +29,6 @@ public class NativeFunctionCall extends Token {
     public NativeFunctionCall(int nativeIndex, Token... params) {
         this.nativeIndex = nativeIndex;
         this.params = params;
-    }
-
-    public NativeFunctionCall() {
     }
 
     @Override
@@ -56,23 +61,34 @@ public class NativeFunctionCall extends Token {
     }
 
     public String toString(UnrealRuntimeContext context) {
-        Optional<Function> function = context.getSerializer().getNativeFunction(nativeIndex);
-        if (function.isPresent()) {
-            Function f = function.get();
-            Collection<Function.Flag> flags = Function.Flag.getFlags(f.functionFlags);
-            if (flags.contains(Function.Flag.PRE_OPERATOR)) {
-                return f.friendlyName + params[0].toString(context);
-            } else if (flags.contains(Function.Flag.OPERATOR)) {
-                if (f.operatorPrecedence > 0) {
-                    return params[0].toString(context) + " " + f.friendlyName + " " + params[params.length - 1].toString(context);
+        if (context.getSerializer() != null) {
+            Optional<Function> function = context.getSerializer().getNativeFunction(nativeIndex);
+            if (function.isPresent()) {
+                Function f = function.get();
+                Collection<Function.Flag> flags = Function.Flag.getFlags(f.functionFlags);
+                if (flags.contains(Function.Flag.PRE_OPERATOR)) {
+                    String b = params[0].toString(context);
+                    if (params[0] instanceof NativeFunctionCall) {
+                        Function inner = context.getSerializer().getNativeFunction(nativeIndex).orElse(null);
+                        if (inner != null) {
+                            Collection<Function.Flag> innerFuncFlags = Function.Flag.getFlags(inner.functionFlags);
+                            if (innerFuncFlags.contains(Function.Flag.OPERATOR)) {
+                                b = "(" + b + ")";
+                            }
+                        }
+                    }
+                    return f.friendlyName + b;
+                } else if (flags.contains(Function.Flag.OPERATOR)) {
+                    if (f.operatorPrecedence > 0) {
+                        return params[0].toString(context) + " " + f.friendlyName + " " + params[params.length - 1].toString(context);
+                    } else {
+                        return params[0].toString(context) + f.friendlyName;
+                    }
                 } else {
-                    return params[0].toString(context) + f.friendlyName;
+                    return f.friendlyName + Arrays.stream(this.params).map((p) -> p.toString(context)).collect(Collectors.joining(", ", "(", ")"));
                 }
-            } else {
-                return f.friendlyName + Arrays.stream(this.params).map((p) -> p.toString(context)).collect(Collectors.joining(", ", "(", ")"));
             }
-        } else {
-            return "native" + this.nativeIndex + Arrays.stream(this.params).map((p) -> p.toString(context)).collect(Collectors.joining(", ", "(", ")"));
         }
+        return "native" + this.nativeIndex + Arrays.stream(this.params).map((p) -> p.toString(context)).collect(Collectors.joining(", ", "(", ")"));
     }
 }

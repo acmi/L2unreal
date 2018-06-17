@@ -24,7 +24,17 @@ package acmi.l2.clientmod.unreal.bytecode.token;
 import acmi.l2.clientmod.io.annotation.Compact;
 import acmi.l2.clientmod.unreal.UnrealRuntimeContext;
 import acmi.l2.clientmod.unreal.annotation.ObjectRef;
+import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
+@AllArgsConstructor
+@NoArgsConstructor
+@EqualsAndHashCode(callSuper = false)
+@Getter
+@Setter
 public class DynamicCast extends Token {
     public static final int OPCODE = 0x2e;
 
@@ -32,14 +42,6 @@ public class DynamicCast extends Token {
     @ObjectRef
     public int classRef;
     public Token value;
-
-    public DynamicCast(int classRef, Token value) {
-        this.classRef = classRef;
-        this.value = value;
-    }
-
-    public DynamicCast() {
-    }
 
     @Override
     protected int getOpcode() {

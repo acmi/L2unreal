@@ -25,11 +25,19 @@ import acmi.l2.clientmod.io.annotation.Compact;
 import acmi.l2.clientmod.unreal.UnrealRuntimeContext;
 import acmi.l2.clientmod.unreal.annotation.NameRef;
 import acmi.l2.clientmod.unreal.bytecode.token.annotation.FunctionParams;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+@NoArgsConstructor
+@EqualsAndHashCode(callSuper = false)
+@Getter
+@Setter
 public class VirtualFunction extends Token {
     public static final int OPCODE = 0x1b;
 
@@ -42,9 +50,6 @@ public class VirtualFunction extends Token {
     public VirtualFunction(int nameRef, Token... params) {
         this.nameRef = nameRef;
         this.params = params;
-    }
-
-    public VirtualFunction() {
     }
 
     @Override

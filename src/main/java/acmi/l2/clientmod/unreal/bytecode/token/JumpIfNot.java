@@ -24,7 +24,17 @@ package acmi.l2.clientmod.unreal.bytecode.token;
 import acmi.l2.clientmod.io.annotation.UShort;
 import acmi.l2.clientmod.unreal.UnrealRuntimeContext;
 import acmi.l2.clientmod.unreal.annotation.Offset;
+import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
+@AllArgsConstructor
+@NoArgsConstructor
+@EqualsAndHashCode(callSuper = false)
+@Getter
+@Setter
 public class JumpIfNot extends Token {
     public static final int OPCODE = 0x07;
 
@@ -32,14 +42,6 @@ public class JumpIfNot extends Token {
     @Offset
     public int targetOffset;
     public Token condition;
-
-    public JumpIfNot(int targetOffset, Token condition) {
-        this.targetOffset = targetOffset;
-        this.condition = condition;
-    }
-
-    public JumpIfNot() {
-    }
 
     @Override
     protected int getOpcode() {

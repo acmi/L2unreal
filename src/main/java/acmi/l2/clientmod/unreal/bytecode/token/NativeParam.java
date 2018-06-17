@@ -24,20 +24,23 @@ package acmi.l2.clientmod.unreal.bytecode.token;
 import acmi.l2.clientmod.io.annotation.Compact;
 import acmi.l2.clientmod.unreal.UnrealRuntimeContext;
 import acmi.l2.clientmod.unreal.annotation.ObjectRef;
+import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
+@AllArgsConstructor
+@NoArgsConstructor
+@EqualsAndHashCode(callSuper = false)
+@Getter
+@Setter
 public class NativeParam extends Token {
     public static final int OPCODE = 0x29;
 
     @Compact
     @ObjectRef
     public int objRef;
-
-    public NativeParam(int objRef) {
-        this.objRef = objRef;
-    }
-
-    public NativeParam() {
-    }
 
     @Override
     protected int getOpcode() {
