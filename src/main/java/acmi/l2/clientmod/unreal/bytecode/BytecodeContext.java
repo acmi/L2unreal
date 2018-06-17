@@ -21,22 +21,24 @@
  */
 package acmi.l2.clientmod.unreal.bytecode;
 
+import javax.annotation.Nonnull;
+
 import acmi.l2.clientmod.io.UnrealPackage;
 import acmi.l2.clientmod.unreal.UnrealPackageContext;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 
+@Data
+@EqualsAndHashCode(callSuper = true, exclude = "conversion")
 public class BytecodeContext extends UnrealPackageContext {
     private boolean conversion;
 
-    public BytecodeContext(UnrealPackage unrealPackage) {
+    public BytecodeContext(@Nonnull UnrealPackage unrealPackage) {
         super(unrealPackage);
     }
 
-    public BytecodeContext(UnrealPackageContext context) {
+    public BytecodeContext(@Nonnull UnrealPackageContext context) {
         super(context.getUnrealPackage());
-    }
-
-    public boolean isConversion() {
-        return conversion;
     }
 
     public void changeConversion() {

@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2016 acmi
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -27,10 +27,13 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
+import javax.annotation.Nonnull;
 
 public interface Env {
+    @Nonnull
     File getStartDir();
 
+    @Nonnull
     List<String> getPaths();
 
     default Stream<File> listFiles() {
@@ -62,7 +65,7 @@ public interface Env {
                 .map(Optional::get);
     }
 
-    default Optional<UnrealPackage.ExportEntry> getExportEntry(String fullName, Predicate<String> fullClassName) throws UncheckedIOException {
+    default Optional<UnrealPackage.ExportEntry> getExportEntry(@Nonnull String fullName, @Nonnull Predicate<String> fullClassName) throws UncheckedIOException {
         String[] path = fullName.split("\\.");
         Optional<UnrealPackage.ExportEntry> entryOptional = listPackages(path[0])
                 .map(UnrealPackage::getExportTable)

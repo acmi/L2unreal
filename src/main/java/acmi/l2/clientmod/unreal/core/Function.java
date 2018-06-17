@@ -27,6 +27,7 @@ import acmi.l2.clientmod.io.annotation.ReadMethod;
 import acmi.l2.clientmod.io.annotation.UByte;
 import acmi.l2.clientmod.io.annotation.UShort;
 import acmi.l2.clientmod.io.annotation.WriteMethod;
+import lombok.Getter;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -58,6 +59,7 @@ public class Function extends Struct {
             output.writeShort(replicationOffset);
     }
 
+    @Getter
     public enum Flag {
         /**
          * Function is final (prebindable, non-overridable function).
@@ -135,11 +137,7 @@ public class Function extends Struct {
          */
         DELEGATE;
 
-        private int mask = 1 << ordinal();
-
-        public int getMask() {
-            return mask;
-        }
+        private final int mask = 1 << ordinal();
 
         @Override
         public String toString() {

@@ -37,6 +37,7 @@ import acmi.l2.clientmod.unreal.properties.PropertiesUtil;
 import javafx.beans.InvalidationListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableSet;
+import lombok.Getter;
 
 import java.io.*;
 import java.lang.annotation.Annotation;
@@ -48,7 +49,10 @@ import java.util.function.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
+import javax.annotation.CheckForNull;
+import javax.annotation.Nonnull;
 
+@SuppressWarnings("unchecked")
 public class UnrealSerializerFactory extends ReflectionSerializerFactory<UnrealRuntimeContext> {
     private static final Logger log = Logger.getLogger(UnrealSerializerFactory.class.getName());
 
@@ -63,29 +67,26 @@ public class UnrealSerializerFactory extends ReflectionSerializerFactory<UnrealR
         }
     }
 
-    public static String unrealClassesPackage = "acmi.l2.clientmod.unreal";
+    public static final String unrealClassesPackage = "acmi.l2.clientmod.unreal";
 
     public static final Predicate<String> IS_STRUCT = c -> c.equalsIgnoreCase("Core.Struct") ||
             c.equalsIgnoreCase("Core.Function") ||
             c.equalsIgnoreCase("Core.State") ||
             c.equalsIgnoreCase("Core.Class");
 
-    private Map<String, Object> objects = new HashMap<>();
-    private Map<Integer, acmi.l2.clientmod.unreal.core.Function> nativeFunctions = new HashMap<>();
-    private ObservableSet<String> loaded = FXCollections.observableSet(new HashSet<>());
+    private final Map<String, Object> objects = new HashMap<>();
+    private final Map<Integer, acmi.l2.clientmod.unreal.core.Function> nativeFunctions = new HashMap<>();
+    private final ObservableSet<String> loaded = FXCollections.observableSet(new HashSet<>());
 
-    private Env environment;
+    @Getter
+    private final Env environment;
 
-    private ExecutorService executorService = Executors.newSingleThreadExecutor(r -> new Thread(null, r, LOAD_THREAD_NAME, LOAD_THREAD_STACK_SIZE) {{
+    private final ExecutorService executorService = Executors.newSingleThreadExecutor(r -> new Thread(null, r, LOAD_THREAD_NAME, LOAD_THREAD_STACK_SIZE) {{
         setDaemon(true);
     }});
 
-    public UnrealSerializerFactory(Env environment) {
-        this.environment = new EnvironmentWrapper(environment);
-    }
-
-    public Env getEnvironment() {
-        return environment;
+    public UnrealSerializerFactory(@Nonnull Env environment) {
+        this.environment = new EnvironmentWrapper(Objects.requireNonNull(environment));
     }
 
     @Override
@@ -172,8 +173,12 @@ public class UnrealSerializerFactory extends ReflectionSerializerFactory<UnrealR
         });
     }
 
-    public Object getOrCreateObject(String objName, Predicate<String> objClass) throws UncheckedIOException {
-        return getOrCreateObject(getExportEntry(objName, objClass)
+    /**
+     * @throws UnrealException if not found
+     */
+    @Nonnull
+    public Object getOrCreateObject(@Nonnull String objName, @Nonnull Predicate<String> objClass) throws UncheckedIOException, UnrealException {
+        return getOrCreateObject(getExportEntry(Objects.requireNonNull(objName), Objects.requireNonNull(objClass))
                 .orElseThrow(() -> new UnrealException("Entry " + objName + " not found")));
     }
 
@@ -184,11 +189,11 @@ public class UnrealSerializerFactory extends ReflectionSerializerFactory<UnrealR
         return getExportEntry(entry.getObjectFullName(), clazz -> clazz.equalsIgnoreCase(entry.getFullClassName()));
     }
 
-    private Optional<UnrealPackage.ExportEntry> getExportEntry(String objName, Predicate<String> objClass) {
+    private Optional<UnrealPackage.ExportEntry> getExportEntry(@Nonnull String objName, @Nonnull Predicate<String> objClass) {
         return environment.getExportEntry(objName, objClass);
     }
 
-    private Class<? extends Object> getClass(String className) throws UncheckedIOException {
+    private Class<? extends Object> getClass(@Nonnull String className) throws UncheckedIOException {
         Class<?> clazz = null;
         try {
             String javaClassName = unrealClassesPackage + "." + unrealClassNameToJavaClassName(className);
@@ -245,7 +250,7 @@ public class UnrealSerializerFactory extends ReflectionSerializerFactory<UnrealR
                     readSize += token.getSize(context);
                     tokens.add(token);
                 }
-                setter.accept(object, () -> tokens.toArray(new Token[tokens.size()]));
+                setter.accept(object, () -> tokens.toArray(new Token[0]));
             });
             write.add((object, dataOutput) -> {
                 BytecodeContext context = new BytecodeContext(dataOutput.getContext());
@@ -327,6 +332,7 @@ public class UnrealSerializerFactory extends ReflectionSerializerFactory<UnrealR
         if (!(obj instanceof acmi.l2.clientmod.unreal.core.Class)) {
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             try {
+                //noinspection InfiniteLoopStatement
                 while (true)
                     baos.write(input.readUnsignedByte());
             } catch (UncheckedIOException ignore) {
@@ -342,14 +348,15 @@ public class UnrealSerializerFactory extends ReflectionSerializerFactory<UnrealR
 
     public Optional<Struct> getStruct(String name) {
         try {
-            return Optional.ofNullable((Struct) getOrCreateObject(name, IS_STRUCT));
+            return Optional.of((Struct) getOrCreateObject(name, IS_STRUCT));
         } catch (Exception e) {
             log.log(Level.WARNING, e, () -> "");
             return Optional.empty();
         }
     }
 
-    public String getSuperClass(String clazz) {
+    @CheckForNull
+    public String getSuperClass(@Nonnull String clazz) {
         Optional<UnrealPackage.ExportEntry> opt = getExportEntry(clazz, IS_STRUCT);
         if (opt.isPresent())
             return opt.get().getObjectSuperClass() != null ?
@@ -371,7 +378,7 @@ public class UnrealSerializerFactory extends ReflectionSerializerFactory<UnrealR
 
     private final Map<String, Boolean> isSubclassCache = new HashMap<>();
 
-    public boolean isSubclass(String parent, String child) {
+    public boolean isSubclass(@Nonnull String parent, @Nonnull String child) {
         if (parent.equalsIgnoreCase(Objects.requireNonNull(child)))
             return true;
 
@@ -385,7 +392,7 @@ public class UnrealSerializerFactory extends ReflectionSerializerFactory<UnrealR
         }
     }
 
-    public <T extends Struct> List<T> getStructTree(T struct) {
+    public <T extends Struct> List<T> getStructTree(@Nonnull T struct) {
         List<T> list = new ArrayList<>();
 
         for (UnrealPackage.ExportEntry entry = struct.entry; entry != null; entry = resolveExportEntry(entry.getObjectSuperClass()).orElse(null)) {
@@ -402,18 +409,20 @@ public class UnrealSerializerFactory extends ReflectionSerializerFactory<UnrealR
     }
 
     private static class EnvironmentWrapper implements Env {
-        private Env environment;
-        private Map<String, UnrealPackage> adds = new HashMap<>();
+        private final Env environment;
+        private final Map<String, UnrealPackage> adds = new HashMap<>();
 
-        public EnvironmentWrapper(Env environment) {
+        public EnvironmentWrapper(@Nonnull Env environment) {
             this.environment = environment;
         }
 
+        @Nonnull
         @Override
         public File getStartDir() {
             return environment.getStartDir();
         }
 
+        @Nonnull
         @Override
         public List<String> getPaths() {
             return environment.getPaths();
@@ -445,7 +454,7 @@ public class UnrealSerializerFactory extends ReflectionSerializerFactory<UnrealR
         }
 
         @Override
-        public Optional<UnrealPackage.ExportEntry> getExportEntry(String fullName, Predicate<String> fullClassName) throws UncheckedIOException {
+        public Optional<UnrealPackage.ExportEntry> getExportEntry(@Nonnull String fullName, @Nonnull Predicate<String> fullClassName) throws UncheckedIOException {
             String[] path = fullName.split("\\.");
 
             Optional<UnrealPackage.ExportEntry> entryOptional = appendCustomPackage(Stream.empty(), path[0])

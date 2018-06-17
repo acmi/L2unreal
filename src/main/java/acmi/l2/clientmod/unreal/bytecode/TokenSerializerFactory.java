@@ -40,6 +40,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.logging.Logger;
+import javax.annotation.Nonnull;
 
 public class TokenSerializerFactory extends ReflectionSerializerFactory<BytecodeContext> {
     private static final Logger log = Logger.getLogger(TokenSerializerFactory.class.getName());
@@ -138,7 +139,7 @@ public class TokenSerializerFactory extends ReflectionSerializerFactory<Bytecode
                 break;
             tokens.add(tmp);
         } while (true);
-        return tokens.toArray(new Token[tokens.size()]);
+        return tokens.toArray(new Token[0]);
     }
 
     private static void writeFunctionParams(ObjectOutput<BytecodeContext> output, Token[] params) throws UncheckedIOException {
@@ -147,7 +148,7 @@ public class TokenSerializerFactory extends ReflectionSerializerFactory<Bytecode
         output.write(new EndFunctionParams());
     }
 
-    public static int getNoneInd(BytecodeContext context) {
+    public static int getNoneInd(@Nonnull BytecodeContext context) {
         return context.getUnrealPackage().nameReference("None");
     }
 
@@ -282,7 +283,7 @@ public class TokenSerializerFactory extends ReflectionSerializerFactory<Bytecode
         }
     }
 
-    public static void register(Class<? extends Token> clazz) {
+    public static void register(@Nonnull Class<? extends Token> clazz) {
         register(clazz, clazz.isAnnotationPresent(ConversionToken.class));
     }
 }

@@ -28,6 +28,8 @@ import acmi.l2.clientmod.io.BufferedRandomAccessFile;
 import acmi.l2.clientmod.io.RandomAccess;
 import acmi.l2.clientmod.io.RandomAccessFile;
 import acmi.l2.clientmod.io.UnrealPackage;
+import lombok.Getter;
+
 import org.apache.commons.io.FilenameUtils;
 
 import java.io.*;
@@ -40,6 +42,7 @@ import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import javax.annotation.Nonnull;
 
 public class Environment implements Env {
     private static final Logger log = Logger.getLogger(Environment.class.getName());
@@ -48,20 +51,22 @@ public class Environment implements Env {
 
     private static final Pattern PATHS_PATTERN = Pattern.compile("\\s*Paths=(.*)");
 
-    private File startDir;
-    private List<String> paths;
+    @Getter(onMethod = @__(@Nonnull))
+    private final File startDir;
+    @Getter(onMethod = @__(@Nonnull))
+    private final List<String> paths;
 
-    private Map<String, List<File>> fileCache = new HashMap<>();
-    private Map<File, UnrealPackage> pckgCache = new HashMap<>();
-    private Map<UnrealPackage, Map<String, UnrealPackage.ExportEntry[]>> entriesCache = new HashMap<>();
-    private Map<UnrealPackage, Map<String, UnrealPackage.ExportEntry[]>> entriesCache2 = new HashMap<>();
+    private final Map<String, List<File>> fileCache = new HashMap<>();
+    private final Map<File, UnrealPackage> pckgCache = new HashMap<>();
+    private final Map<UnrealPackage, Map<String, UnrealPackage.ExportEntry[]>> entriesCache = new HashMap<>();
+    private final Map<UnrealPackage, Map<String, UnrealPackage.ExportEntry[]>> entriesCache2 = new HashMap<>();
 
-    public Environment(File startDir, List<String> paths) {
+    public Environment(@Nonnull File startDir, @Nonnull List<String> paths) {
         this.startDir = startDir;
         this.paths = paths;
     }
 
-    public static Environment fromIni(File ini) throws UncheckedIOException {
+    public static Environment fromIni(@Nonnull File ini) throws UncheckedIOException {
         try (InputStream bis = new BufferedInputStream(new FileInputStream(ini))) {
             InputStream is = bis;
             bis.mark(28);
@@ -101,16 +106,6 @@ public class Environment implements Env {
     }
 
     @Override
-    public File getStartDir() {
-        return startDir;
-    }
-
-    @Override
-    public List<String> getPaths() {
-        return paths;
-    }
-
-    @Override
     public Stream<File> getPackage(String name) {
         if (!fileCache.containsKey(name)) {
             fileCache.put(name, listFiles()
@@ -147,7 +142,7 @@ public class Environment implements Env {
     }
 
     @Override
-    public Optional<UnrealPackage.ExportEntry> getExportEntry(String fullName, Predicate<String> fullClassName) throws UncheckedIOException {
+    public Optional<UnrealPackage.ExportEntry> getExportEntry(@Nonnull String fullName, @Nonnull Predicate<String> fullClassName) throws UncheckedIOException {
         String[] path = fullName.split("\\.");
         Optional<UnrealPackage.ExportEntry> entryOptional = listPackages(path[0])
                 .map(up -> entriesCache.get(up))

@@ -26,6 +26,8 @@ import java.util.Collection;
 import java.util.stream.Collectors;
 
 import acmi.l2.clientmod.io.annotation.UShort;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 
 public class State extends Struct {
     public long probeMask;
@@ -34,6 +36,8 @@ public class State extends Struct {
     public int labelTableOffset;
     public int stateFlags;
 
+    @RequiredArgsConstructor
+    @Getter
     public enum Flags {
         /**
          * Flags should be user-selectable in UnrealEd.
@@ -48,15 +52,7 @@ public class State extends Struct {
          */
         Simulated(0x00000004);
 
-        private int mask;
-
-        Flags(int mask) {
-            this.mask = mask;
-        }
-
-        public int getMask() {
-            return mask;
-        }
+        private final int mask;
 
         public static Collection<Flags> getFlags(int flags) {
             return Arrays.stream(values())

@@ -21,24 +21,27 @@
  */
 package acmi.l2.clientmod.unreal;
 
-import acmi.l2.clientmod.io.UnrealPackage;
+import javax.annotation.CheckForNull;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
+import acmi.l2.clientmod.io.UnrealPackage;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+
+@Data
+@EqualsAndHashCode(callSuper = false)
 public class UnrealRuntimeContext extends UnrealPackageContext {
+    @Getter(onMethod = @__(@Nonnull))
     private UnrealPackage.ExportEntry entry;
 
+    @Getter(onMethod = @__(@CheckForNull))
     private UnrealSerializerFactory serializer;
 
-    public UnrealRuntimeContext(UnrealPackage.ExportEntry entry, UnrealSerializerFactory serializer) {
+    public UnrealRuntimeContext(@Nonnull UnrealPackage.ExportEntry entry, @Nullable UnrealSerializerFactory serializer) {
         super(entry.getUnrealPackage());
         this.entry = entry;
         this.serializer = serializer;
-    }
-
-    public UnrealPackage.ExportEntry getEntry() {
-        return entry;
-    }
-
-    public UnrealSerializerFactory getSerializer() {
-        return serializer;
     }
 }

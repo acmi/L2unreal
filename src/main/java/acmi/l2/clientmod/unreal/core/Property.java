@@ -28,6 +28,8 @@ import acmi.l2.clientmod.io.annotation.UShort;
 import acmi.l2.clientmod.io.annotation.WriteMethod;
 import acmi.l2.clientmod.unreal.UnrealRuntimeContext;
 import acmi.l2.clientmod.unreal.annotation.NameRef;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -63,6 +65,8 @@ public class Property extends Field {
             output.writeShort(replicationOffset);
     }
 
+    @RequiredArgsConstructor
+    @Getter
     public enum CPF {
         /**
          * Property is user-settable in the editor.
@@ -162,15 +166,7 @@ public class Property extends Field {
         EditInlineNotify(0x40000000),
         UNK_80000000(0x80000000);
 
-        private int mask;
-
-        CPF(int mask) {
-            this.mask = mask;
-        }
-
-        public int getMask() {
-            return mask;
-        }
+        private final int mask;
 
         public static Collection<CPF> getFlags(int flags) {
             return Arrays.stream(values())

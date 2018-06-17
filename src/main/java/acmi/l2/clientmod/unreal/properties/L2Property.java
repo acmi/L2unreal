@@ -23,25 +23,25 @@ package acmi.l2.clientmod.unreal.properties;
 
 import acmi.l2.clientmod.unreal.core.Property;
 import acmi.l2.clientmod.unreal.core.StructProperty;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
 
-import java.util.Arrays;
 import java.util.List;
+import javax.annotation.Nonnull;
 
+@EqualsAndHashCode
 public final class L2Property {
+    @Getter(onMethod = @__(@Nonnull))
     private final Property template;
     private final Object[] value;
 
-    public L2Property(Property template) {
+    public L2Property(@Nonnull Property template) {
         this.template = template;
         this.value = new Object[template.arrayDimension];
     }
 
     public String getName() {
         return template.entry.getObjectName().getName();
-    }
-
-    public Property getTemplate() {
-        return template;
     }
 
     public int getSize() {
@@ -57,24 +57,6 @@ public final class L2Property {
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof L2Property)) return false;
-
-        L2Property that = (L2Property) o;
-
-        return template.equals(that.template) && Arrays.deepEquals(value, that.value);
-
-    }
-
-    @Override
-    public int hashCode() {
-        int result = template.hashCode();
-        result = 31 * result + Arrays.hashCode(value);
-        return result;
-    }
-
-    @Override
     public String toString() {
         return "L2Property[" + template + "]";
     }
@@ -87,6 +69,7 @@ public final class L2Property {
             if (primitive)
                 copy.putAt(i, getAt(i));
             else if (isStruct)
+                //noinspection unchecked
                 copy.putAt(i, PropertiesUtil.cloneStruct((List<L2Property>) getAt(i)));
             //else ???
         }

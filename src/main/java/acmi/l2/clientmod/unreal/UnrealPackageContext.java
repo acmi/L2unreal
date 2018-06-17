@@ -21,17 +21,19 @@
  */
 package acmi.l2.clientmod.unreal;
 
+import javax.annotation.Nonnull;
+
 import acmi.l2.clientmod.io.Context;
 import acmi.l2.clientmod.io.UnrealPackage;
+import lombok.Data;
+import lombok.Getter;
 
+@Data
 public class UnrealPackageContext implements Context {
+    @Getter(onMethod = @__(@Nonnull))
     private final UnrealPackage unrealPackage;
 
-    public UnrealPackageContext(UnrealPackage unrealPackage) {
+    public UnrealPackageContext(@Nonnull UnrealPackage unrealPackage) {
         this.unrealPackage = unrealPackage;
-    }
-
-    public UnrealPackage getUnrealPackage() {
-        return unrealPackage;
     }
 }

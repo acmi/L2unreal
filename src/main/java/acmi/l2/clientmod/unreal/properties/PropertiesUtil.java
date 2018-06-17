@@ -26,9 +26,9 @@ import acmi.l2.clientmod.unreal.UnrealException;
 import acmi.l2.clientmod.unreal.UnrealRuntimeContext;
 import acmi.l2.clientmod.unreal.UnrealSerializerFactory;
 import acmi.l2.clientmod.unreal.core.*;
+import lombok.RequiredArgsConstructor;
 
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.lang.Class;
 import java.lang.Object;
@@ -38,6 +38,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
+@SuppressWarnings("unchecked")
 public class PropertiesUtil {
     private static final Logger log = Logger.getLogger(PropertiesUtil.class.getName());
 
@@ -300,6 +301,7 @@ public class PropertiesUtil {
         return up.nameReference(name);
     }
 
+    @RequiredArgsConstructor
     public enum Type {
         NONE(null),
         BYTE(ByteProperty.class),
@@ -318,11 +320,7 @@ public class PropertiesUtil {
         _MAP(null),
         _FIXED_ARRAY(null);
 
-        private Class<? extends Property> clazz;
-
-        Type(Class<? extends Property> clazz) {
-            this.clazz = clazz;
-        }
+        private final Class<? extends Property> clazz;
     }
 
     public static Type getPropertyType(int info) {
@@ -359,7 +357,7 @@ public class PropertiesUtil {
         return info >> 7 != 0;
     }
 
-    public static int readPropertySize(int sizeType, DataInput dataInput) throws IOException {
+    public static int readPropertySize(int sizeType, DataInput dataInput) throws UncheckedIOException {
         switch (sizeType) {
             case 0:
                 return 1;
