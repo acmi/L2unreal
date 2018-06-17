@@ -75,7 +75,10 @@ public class FinalFunction extends Token {
             UnrealPackage.Entry funcHolder = func.getObjectPackage();
             if (!Objects.equals(entryHolder.getObjectFullName(), funcHolder.getObjectFullName()) &&
                     context.getSerializer().isSubclass(funcHolder.getObjectFullName(), entryHolder.getObjectFullName())) {
-                pref = "Super.";
+                pref = context.getSerializer()
+                        .getEnvironment()
+                        .getExportEntry(entryHolder.getObjectFullName() + "." + func.getObjectName().getName(), "Core.Function"::equalsIgnoreCase)
+                        .isPresent() ? "Super." : "";
             }
         }
 
