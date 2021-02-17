@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 acmi
+ * Copyright (c) 2021 acmi
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -41,7 +41,7 @@ public class Object {
     public transient UnrealPackage.ExportEntry entry;
 
     public StateFrame stateFrame;
-    public List<L2Property> properties = new ArrayList<>();
+    public final List<L2Property> properties = new ArrayList<>();
 
     public transient byte[] unreadBytes;
 

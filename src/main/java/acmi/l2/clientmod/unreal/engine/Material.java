@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 acmi
+ * Copyright (c) 2021 acmi
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -59,8 +59,9 @@ public class Material extends Object {
             byte[] unk = new byte[1067];
             input.readFully(unk);
             output.writeBytes(unk);
-            for (int i = 0; i < 16; i++)
+            for (int i = 0; i < 16; i++) {
                 output.writeLine(input.readLine());
+            }
             output.writeLine(input.readLine());
             output.writeInt(input.readInt());
         } else if (license == 36) {
@@ -68,8 +69,9 @@ public class Material extends Object {
             byte[] unk = new byte[1058];
             input.readFully(unk);
             output.writeBytes(unk);
-            for (int i = 0; i < 16; i++)
+            for (int i = 0; i < 16; i++) {
                 output.writeLine(input.readLine());
+            }
             output.writeLine(input.readLine());
             output.writeInt(input.readInt());
         } else if (license <= 39) {
@@ -84,8 +86,9 @@ public class Material extends Object {
                     output.writeLine(input.readLine());
                     int addStringCount = input.readUnsignedByte();
                     output.writeByte(addStringCount);
-                    for (int j = 0; j < addStringCount; j++)
+                    for (int j = 0; j < addStringCount; j++) {
                         output.writeLine(input.readLine());
+                    }
                 }
                 output.writeLine(input.readLine());
                 output.writeInt(input.readInt());
@@ -100,8 +103,9 @@ public class Material extends Object {
                     output.writeLine(input.readLine());
                     int addStringCount = input.readUnsignedByte();
                     output.writeByte(addStringCount);
-                    for (int j = 0; j < addStringCount; j++)
+                    for (int j = 0; j < addStringCount; j++) {
                         output.writeLine(input.readLine());
+                    }
                 }
                 output.writeLine(input.readLine());
                 output.writeInt(input.readInt());
@@ -117,8 +121,9 @@ public class Material extends Object {
                 output.writeLine(input.readLine());
                 int addStringCount = input.readUnsignedByte();
                 output.writeByte(addStringCount);
-                for (int j = 0; j < addStringCount; j++)
+                for (int j = 0; j < addStringCount; j++) {
                     output.writeLine(input.readLine());
+                }
             }
             output.writeLine(input.readLine());
             output.writeInt(input.readInt());

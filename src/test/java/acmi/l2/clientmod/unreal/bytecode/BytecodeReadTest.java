@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 acmi
+ * Copyright (c) 2021 acmi
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -64,8 +64,9 @@ public class BytecodeReadTest {
                                     tokenSerializerFactory,
                                     context
                             );
-                            if (!entry.getFullClassName().equalsIgnoreCase("Core.Class"))
+                            if (!entry.getFullClassName().equalsIgnoreCase("Core.Class")) {
                                 input.readCompactInt();
+                            }
                             input.readCompactInt();
                             input.readCompactInt();
                             input.readCompactInt();

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 acmi
+ * Copyright (c) 2021 acmi
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -61,8 +61,9 @@ public class Property extends Field {
         output.writeShort(elementSize);
         output.writeInt(propertyFlags);
         output.writeCompactInt(output.getContext().getUnrealPackage().nameReference(category));
-        if ((propertyFlags & CPF.Net.getMask()) != 0)
+        if ((propertyFlags & CPF.Net.getMask()) != 0) {
             output.writeShort(replicationOffset);
+        }
     }
 
     @RequiredArgsConstructor
@@ -176,8 +177,9 @@ public class Property extends Field {
 
         public static int getFlags(CPF... flags) {
             int v = 0;
-            for (CPF flag : flags)
+            for (CPF flag : flags) {
                 v |= flag.getMask();
+            }
             return v;
         }
 

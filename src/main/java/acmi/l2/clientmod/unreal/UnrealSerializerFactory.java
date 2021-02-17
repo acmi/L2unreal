@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 acmi
+ * Copyright (c) 2021 acmi
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -34,10 +34,11 @@ import acmi.l2.clientmod.unreal.bytecode.token.Token;
 import acmi.l2.clientmod.unreal.core.Object;
 import acmi.l2.clientmod.unreal.core.Struct;
 import acmi.l2.clientmod.unreal.properties.PropertiesUtil;
-import javafx.beans.InvalidationListener;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableSet;
+import acmi.l2.clientmod.unreal.util.InvalidationListener;
+import acmi.l2.clientmod.unreal.util.ObservableSet;
+import acmi.l2.clientmod.unreal.util.ObservableSetWrapper;
 import lombok.Getter;
+import lombok.NonNull;
 
 import java.io.*;
 import java.lang.annotation.Annotation;
@@ -49,8 +50,6 @@ import java.util.function.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
-import javax.annotation.CheckForNull;
-import javax.annotation.Nonnull;
 
 @SuppressWarnings("unchecked")
 public class UnrealSerializerFactory extends ReflectionSerializerFactory<UnrealRuntimeContext> {
@@ -76,7 +75,7 @@ public class UnrealSerializerFactory extends ReflectionSerializerFactory<UnrealR
 
     private final Map<String, Object> objects = new HashMap<>();
     private final Map<Integer, acmi.l2.clientmod.unreal.core.Function> nativeFunctions = new HashMap<>();
-    private final ObservableSet<String> loaded = FXCollections.observableSet(new HashSet<>());
+    private final ObservableSet<String> loaded = new ObservableSetWrapper<>(new HashSet<>());
 
     @Getter
     private final Env environment;
@@ -85,25 +84,27 @@ public class UnrealSerializerFactory extends ReflectionSerializerFactory<UnrealR
         setDaemon(true);
     }});
 
-    public UnrealSerializerFactory(@Nonnull Env environment) {
-        this.environment = new EnvironmentWrapper(Objects.requireNonNull(environment));
+    public UnrealSerializerFactory(@NonNull Env environment) {
+        this.environment = new EnvironmentWrapper(environment);
     }
 
     @Override
     protected Function<ObjectInput<UnrealRuntimeContext>, java.lang.Object> createInstantiator(Class<?> clazz) {
-        if (Object.class.isAssignableFrom(clazz))
+        if (Object.class.isAssignableFrom(clazz)) {
             return objectInput -> {
                 UnrealRuntimeContext context = objectInput.getContext();
                 int objRef = objectInput.readCompactInt();
                 UnrealPackage.Entry entry = context.getUnrealPackage().objectReference(objRef);
                 return getOrCreateObject(entry);
             };
+        }
         return super.createInstantiator(clazz);
     }
 
     public Object getOrCreateObject(UnrealPackage.Entry packageLocalEntry) throws UncheckedIOException {
-        if (packageLocalEntry == null)
+        if (packageLocalEntry == null) {
             return null;
+        }
 
         String key = keyFor(packageLocalEntry);
         if (!objects.containsKey(key)) {
@@ -176,24 +177,24 @@ public class UnrealSerializerFactory extends ReflectionSerializerFactory<UnrealR
     /**
      * @throws UnrealException if not found
      */
-    @Nonnull
-    public Object getOrCreateObject(@Nonnull String objName, @Nonnull Predicate<String> objClass) throws UncheckedIOException, UnrealException {
-        return getOrCreateObject(getExportEntry(Objects.requireNonNull(objName), Objects.requireNonNull(objClass))
+    public Object getOrCreateObject(@NonNull String objName, @NonNull Predicate<String> objClass) throws UncheckedIOException, UnrealException {
+        return getOrCreateObject(getExportEntry(objName, objClass)
                 .orElseThrow(() -> new UnrealException("Entry " + objName + " not found")));
     }
 
     public Optional<UnrealPackage.ExportEntry> resolveExportEntry(UnrealPackage.Entry entry) {
-        if (entry == null)
+        if (entry == null) {
             return Optional.empty();
+        }
 
         return getExportEntry(entry.getObjectFullName(), clazz -> clazz.equalsIgnoreCase(entry.getFullClassName()));
     }
 
-    private Optional<UnrealPackage.ExportEntry> getExportEntry(@Nonnull String objName, @Nonnull Predicate<String> objClass) {
+    private Optional<UnrealPackage.ExportEntry> getExportEntry(String objName, Predicate<String> objClass) {
         return environment.getExportEntry(objName, objClass);
     }
 
-    private Class<? extends Object> getClass(@Nonnull String className) throws UncheckedIOException {
+    private Class<? extends Object> getClass(String className) throws UncheckedIOException {
         Class<?> clazz = null;
         try {
             String javaClassName = unrealClassesPackage + "." + unrealClassNameToJavaClassName(className);
@@ -258,8 +259,9 @@ public class UnrealSerializerFactory extends ReflectionSerializerFactory<UnrealR
                 ObjectOutput<BytecodeContext> output = ObjectOutput.objectOutput(dataOutput, serializerFactory, context);
                 Token[] array = (Token[]) getter.apply(object);
                 output.writeInt(array.length);
-                for (Token token: array)
+                for (Token token: array) {
                     output.write(token);
+                }
             });
         } else {
             super.serializer(type, getter, setter, getAnnotation, read, write);
@@ -276,13 +278,15 @@ public class UnrealSerializerFactory extends ReflectionSerializerFactory<UnrealR
         ) {
             @Override
             public java.lang.Object readObject(Class clazz) throws UncheckedIOException {
-                if (getSerializerFactory() == null)
+                if (getSerializerFactory() == null) {
                     throw new IllegalStateException("SerializerFactory is null");
+                }
 
                 Serializer serializer = getSerializerFactory().forClass(clazz);
                 java.lang.Object obj = serializer.instantiate(this);
-                if (!(obj instanceof acmi.l2.clientmod.unreal.core.Object))
+                if (!(obj instanceof acmi.l2.clientmod.unreal.core.Object)) {
                     throw new RuntimeException("USE input.getSerializerFactory().forClass(class).readObject(object, input);");
+                }
                 return obj;
             }
         };
@@ -292,8 +296,9 @@ public class UnrealSerializerFactory extends ReflectionSerializerFactory<UnrealR
 
         if (obj instanceof acmi.l2.clientmod.unreal.core.Function) {
             acmi.l2.clientmod.unreal.core.Function func = (acmi.l2.clientmod.unreal.core.Function) obj;
-            if (func.nativeIndex > 0)
+            if (func.nativeIndex > 0) {
                 nativeFunctions.put(func.nativeIndex, func);
+            }
         }
 
         if (entry.getFullClassName().equalsIgnoreCase("Core.Class")) {
@@ -317,7 +322,7 @@ public class UnrealSerializerFactory extends ReflectionSerializerFactory<UnrealR
                     };
                     InvalidationListener il = new InvalidationListener() {
                         @Override
-                        public void invalidated(javafx.beans.Observable observable) {
+                        public void invalidated(acmi.l2.clientmod.unreal.util.Observable observable) {
                             c.accept(this);
                         }
                     };
@@ -333,14 +338,16 @@ public class UnrealSerializerFactory extends ReflectionSerializerFactory<UnrealR
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             try {
                 //noinspection InfiniteLoopStatement
-                while (true)
+                while (true) {
                     baos.write(input.readUnsignedByte());
+                }
             } catch (UncheckedIOException ignore) {
             }
 
             obj.unreadBytes = baos.toByteArray();
-            if (obj.unreadBytes.length > 0)
+            if (obj.unreadBytes.length > 0) {
                 log.warning(() -> obj + " " + obj.unreadBytes.length + " bytes ignored");
+            }
         }
 
         log.finest(() -> entry.getObjectFullName() + " loaded");
@@ -355,13 +362,15 @@ public class UnrealSerializerFactory extends ReflectionSerializerFactory<UnrealR
         }
     }
 
-    @CheckForNull
-    public String getSuperClass(@Nonnull String clazz) {
+    /**
+     * @return superClass or null
+     */
+    public String getSuperClass(@NonNull String clazz) {
         Optional<UnrealPackage.ExportEntry> opt = getExportEntry(clazz, IS_STRUCT);
-        if (opt.isPresent())
+        if (opt.isPresent()) {
             return opt.get().getObjectSuperClass() != null ?
                     opt.get().getObjectSuperClass().getObjectFullName() : null;
-        else {
+        } else {
             try {
                 Class<?> javaClass = Class.forName(unrealClassesPackage + "." + unrealClassNameToJavaClassName(clazz));
                 Class<?> javaSuperClass = javaClass.getSuperclass();
@@ -378,9 +387,10 @@ public class UnrealSerializerFactory extends ReflectionSerializerFactory<UnrealR
 
     private final Map<String, Boolean> isSubclassCache = new HashMap<>();
 
-    public boolean isSubclass(@Nonnull String parent, @Nonnull String child) {
-        if (parent.equalsIgnoreCase(Objects.requireNonNull(child)))
+    public boolean isSubclass(@NonNull String parent, @NonNull String child) {
+        if (parent.equalsIgnoreCase(child)) {
             return true;
+        }
 
         String k = parent + "@" + child;
         synchronized (isSubclassCache) {
@@ -392,7 +402,7 @@ public class UnrealSerializerFactory extends ReflectionSerializerFactory<UnrealR
         }
     }
 
-    public <T extends Struct> List<T> getStructTree(@Nonnull T struct) {
+    public <T extends Struct> List<T> getStructTree(@NonNull T struct) {
         List<T> list = new ArrayList<>();
 
         for (UnrealPackage.ExportEntry entry = struct.entry; entry != null; entry = resolveExportEntry(entry.getObjectSuperClass()).orElse(null)) {
@@ -412,17 +422,15 @@ public class UnrealSerializerFactory extends ReflectionSerializerFactory<UnrealR
         private final Env environment;
         private final Map<String, UnrealPackage> adds = new HashMap<>();
 
-        public EnvironmentWrapper(@Nonnull Env environment) {
+        public EnvironmentWrapper(@NonNull Env environment) {
             this.environment = environment;
         }
 
-        @Nonnull
         @Override
         public File getStartDir() {
             return environment.getStartDir();
         }
 
-        @Nonnull
         @Override
         public List<String> getPaths() {
             return environment.getPaths();
@@ -454,7 +462,7 @@ public class UnrealSerializerFactory extends ReflectionSerializerFactory<UnrealR
         }
 
         @Override
-        public Optional<UnrealPackage.ExportEntry> getExportEntry(@Nonnull String fullName, @Nonnull Predicate<String> fullClassName) throws UncheckedIOException {
+        public Optional<UnrealPackage.ExportEntry> getExportEntry(@NonNull String fullName, @NonNull Predicate<String> fullClassName) throws UncheckedIOException {
             String[] path = fullName.split("\\.");
 
             Optional<UnrealPackage.ExportEntry> entryOptional = appendCustomPackage(Stream.empty(), path[0])
@@ -463,15 +471,17 @@ public class UnrealSerializerFactory extends ReflectionSerializerFactory<UnrealR
                     .filter(e -> e.getObjectFullName().equalsIgnoreCase(fullName))
                     .filter(e -> fullClassName.test(e.getFullClassName()))
                     .findAny();
-            if (entryOptional.isPresent())
+            if (entryOptional.isPresent()) {
                 return entryOptional;
+            }
 
             return environment.getExportEntry(fullName, fullClassName);
         }
 
         private Stream<UnrealPackage> appendCustomPackage(Stream<UnrealPackage> stream, String name) {
-            if (!name.equalsIgnoreCase("Engine") && !name.equalsIgnoreCase("Core"))
+            if (!name.equalsIgnoreCase("Engine") && !name.equalsIgnoreCase("Core")) {
                 return stream;
+            }
 
             name = canonizeName(name);
             if (!adds.containsKey(name)) {
@@ -479,8 +489,9 @@ public class UnrealSerializerFactory extends ReflectionSerializerFactory<UnrealR
                 try (InputStream is = getClass().getResourceAsStream("/" + name + ".u")) {
                     byte[] buf = new byte[1024];
                     int r;
-                    while ((r = is.read(buf)) != -1)
+                    while ((r = is.read(buf)) != -1) {
                         baos.write(buf, 0, r);
+                    }
                 } catch (IOException e) {
                     throw new UnrealException(e);
                 }

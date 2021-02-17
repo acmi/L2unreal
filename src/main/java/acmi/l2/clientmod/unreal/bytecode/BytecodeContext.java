@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 acmi
+ * Copyright (c) 2021 acmi
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,27 +21,36 @@
  */
 package acmi.l2.clientmod.unreal.bytecode;
 
-import javax.annotation.Nonnull;
-
 import acmi.l2.clientmod.io.UnrealPackage;
 import acmi.l2.clientmod.unreal.UnrealPackageContext;
-import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NonNull;
+import lombok.Setter;
 
-@Data
 @EqualsAndHashCode(callSuper = true, exclude = "conversion")
 public class BytecodeContext extends UnrealPackageContext {
+    @Getter
+    @Setter
     private boolean conversion;
 
-    public BytecodeContext(@Nonnull UnrealPackage unrealPackage) {
+    public BytecodeContext(@NonNull UnrealPackage unrealPackage) {
         super(unrealPackage);
     }
 
-    public BytecodeContext(@Nonnull UnrealPackageContext context) {
+    public BytecodeContext(@NonNull UnrealPackageContext context) {
         super(context.getUnrealPackage());
     }
 
     public void changeConversion() {
         conversion = !conversion;
+    }
+
+    @Override
+    public String toString() {
+        return "BytecodeContext(" +
+                "unrealPackage=" + getUnrealPackage() +
+                ", conversion=" + conversion +
+                ')';
     }
 }

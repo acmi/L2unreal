@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 acmi
+ * Copyright (c) 2021 acmi
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,19 +21,21 @@
  */
 package acmi.l2.clientmod.unreal;
 
-import javax.annotation.Nonnull;
-
 import acmi.l2.clientmod.io.Context;
 import acmi.l2.clientmod.io.UnrealPackage;
-import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.NonNull;
+import lombok.ToString;
 
-@Data
+@Getter
+@EqualsAndHashCode
+@ToString
 public class UnrealPackageContext implements Context {
-    @Getter(onMethod = @__(@Nonnull))
+    @Getter
     private final UnrealPackage unrealPackage;
 
-    public UnrealPackageContext(@Nonnull UnrealPackage unrealPackage) {
+    public UnrealPackageContext(@NonNull UnrealPackage unrealPackage) {
         this.unrealPackage = unrealPackage;
     }
 }

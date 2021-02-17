@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 acmi
+ * Copyright (c) 2021 acmi
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -69,8 +69,9 @@ public class LabelTable extends Token {
         Label tmp;
         do {
             tmp = input.readObject(Label.class);
-            if (tmp.nameRef == TokenSerializerFactory.getNoneInd(input.getContext()))
+            if (tmp.nameRef == TokenSerializerFactory.getNoneInd(input.getContext())) {
                 break;
+            }
             labels.add(tmp);
         } while (true);
         this.labels = labels.toArray(new Label[0]);
@@ -78,10 +79,11 @@ public class LabelTable extends Token {
 
     @WriteMethod
     public void writeLabelTable(ObjectOutput<BytecodeContext> output) throws UncheckedIOException {
-        if (labels != null)
+        if (labels != null) {
             for (Label label : labels) {
                 output.write(label);
             }
+        }
         output.write(new Label(TokenSerializerFactory.getNoneInd(output.getContext()), 0xffff, 0));
     }
 

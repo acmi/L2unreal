@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 acmi
+ * Copyright (c) 2021 acmi
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -27,6 +27,7 @@ import acmi.l2.clientmod.unreal.bytecode.token.*;
 import acmi.l2.clientmod.unreal.bytecode.token.Context;
 import acmi.l2.clientmod.unreal.bytecode.token.annotation.ConversionToken;
 import acmi.l2.clientmod.unreal.bytecode.token.annotation.FunctionParams;
+import lombok.NonNull;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -40,7 +41,6 @@ import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.logging.Logger;
-import javax.annotation.Nonnull;
 
 public class TokenSerializerFactory extends ReflectionSerializerFactory<BytecodeContext> {
     private static final Logger log = Logger.getLogger(TokenSerializerFactory.class.getName());
@@ -53,8 +53,9 @@ public class TokenSerializerFactory extends ReflectionSerializerFactory<Bytecode
 
     @Override
     protected Function<ObjectInput<BytecodeContext>, Object> createInstantiator(Class<?> clazz) {
-        if (Token.class.isAssignableFrom(clazz))
+        if (Token.class.isAssignableFrom(clazz)) {
             return this::instantiate;
+        }
         return super.createInstantiator(clazz);
     }
 
@@ -68,20 +69,23 @@ public class TokenSerializerFactory extends ReflectionSerializerFactory<Bytecode
 
             input.getContext().changeConversion();
         } else {
-            if (opcode >= EX_ExtendedNative)
+            if (opcode >= EX_ExtendedNative) {
                 return readNativeCall(input, opcode);
+            }
 
             table = mainTokenTable;
             tableName = "Main";
 
-            if (opcode == ConversionTable.OPCODE)
+            if (opcode == ConversionTable.OPCODE) {
                 input.getContext().changeConversion();
+            }
         }
 
         Class<? extends Token> tokenClass = table.get(opcode);
 
-        if (tokenClass == null)
+        if (tokenClass == null) {
             throw new UncheckedIOException(new IOException(String.format("Unknown token: %02x, table: %s", opcode, tableName)));
+        }
 
         try {
             return tokenClass.newInstance();
@@ -94,8 +98,9 @@ public class TokenSerializerFactory extends ReflectionSerializerFactory<Bytecode
         int nativeIndex = (b & 0xF0) == EX_ExtendedNative ?
                 ((b - EX_ExtendedNative) << 8) + input.readUnsignedByte() : b;
 
-        if (nativeIndex < EX_FirstNative)
+        if (nativeIndex < EX_FirstNative) {
             throw new UnrealException("Invalid native index: " + nativeIndex);
+        }
 
         return new NativeFunctionCall(nativeIndex);
     }
@@ -135,20 +140,22 @@ public class TokenSerializerFactory extends ReflectionSerializerFactory<Bytecode
         Token tmp;
         do {
             tmp = readToken(input);
-            if (tmp instanceof EndFunctionParams)
+            if (tmp instanceof EndFunctionParams) {
                 break;
+            }
             tokens.add(tmp);
         } while (true);
         return tokens.toArray(new Token[0]);
     }
 
     private static void writeFunctionParams(ObjectOutput<BytecodeContext> output, Token[] params) throws UncheckedIOException {
-        for (Token token : params)
+        for (Token token : params) {
             output.write(token);
+        }
         output.write(new EndFunctionParams());
     }
 
-    public static int getNoneInd(@Nonnull BytecodeContext context) {
+    public static int getNoneInd(@NonNull BytecodeContext context) {
         return context.getUnrealPackage().nameReference("None");
     }
 
@@ -276,14 +283,15 @@ public class TokenSerializerFactory extends ReflectionSerializerFactory<Bytecode
 
         try {
             Class<? extends Token> old = table.put(clazz.getDeclaredField("OPCODE").getInt(null), clazz);
-            if (old != null)
+            if (old != null) {
                 log.info(old + " replaced with " + clazz);
+            }
         } catch (ReflectiveOperationException e) {
             throw new RuntimeException(String.format("Couldn't register %s opcode", clazz), e);
         }
     }
 
-    public static void register(@Nonnull Class<? extends Token> clazz) {
+    public static void register(@NonNull Class<? extends Token> clazz) {
         register(clazz, clazz.isAnnotationPresent(ConversionToken.class));
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 acmi
+ * Copyright (c) 2021 acmi
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,27 +21,29 @@
  */
 package acmi.l2.clientmod.unreal;
 
-import javax.annotation.CheckForNull;
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-
 import acmi.l2.clientmod.io.UnrealPackage;
-import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.NonNull;
 
-@Data
+@Getter
 @EqualsAndHashCode(callSuper = false)
 public class UnrealRuntimeContext extends UnrealPackageContext {
-    @Getter(onMethod = @__(@Nonnull))
-    private UnrealPackage.ExportEntry entry;
+    private final UnrealPackage.ExportEntry entry;
+    private final UnrealSerializerFactory serializer;
 
-    @Getter(onMethod = @__(@CheckForNull))
-    private UnrealSerializerFactory serializer;
-
-    public UnrealRuntimeContext(@Nonnull UnrealPackage.ExportEntry entry, @Nullable UnrealSerializerFactory serializer) {
+    public UnrealRuntimeContext(@NonNull UnrealPackage.ExportEntry entry, UnrealSerializerFactory serializer) {
         super(entry.getUnrealPackage());
         this.entry = entry;
         this.serializer = serializer;
+    }
+
+    @Override
+    public String toString() {
+        return "UnrealRuntimeContext(" +
+                "unrealPackage=" + getUnrealPackage() +
+                ", entry=" + entry +
+                ", serializer=" + serializer +
+                ')';
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014 acmi
+ * Copyright (c) 2021 acmi
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,17 +25,17 @@ import acmi.l2.clientmod.unreal.core.Property;
 import acmi.l2.clientmod.unreal.core.StructProperty;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.NonNull;
 
 import java.util.List;
-import javax.annotation.Nonnull;
 
 @EqualsAndHashCode
 public final class L2Property {
-    @Getter(onMethod = @__(@Nonnull))
+    @Getter
     private final Property template;
     private final Object[] value;
 
-    public L2Property(@Nonnull Property template) {
+    public L2Property(@NonNull Property template) {
         this.template = template;
         this.value = new Object[template.arrayDimension];
     }
@@ -66,11 +66,13 @@ public final class L2Property {
         boolean primitive = PropertiesUtil.isPrimitive(template);
         boolean isStruct = template instanceof StructProperty;
         for (int i = 0; i < getSize(); i++) {
-            if (primitive)
+            if (primitive) {
                 copy.putAt(i, getAt(i));
-            else if (isStruct)
+            } else if (isStruct)
                 //noinspection unchecked
+            {
                 copy.putAt(i, PropertiesUtil.cloneStruct((List<L2Property>) getAt(i)));
+            }
             //else ???
         }
         return copy;

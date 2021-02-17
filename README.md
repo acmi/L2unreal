@@ -1,5 +1,8 @@
 L2unreal
 ========
+![GitHub](https://img.shields.io/github/license/acmi/l2unreal)
+[![](https://jitpack.io/v/acmi/l2unreal.svg)](https://jitpack.io/#acmi/l2unreal)
+
 Library for reading/modifying Lineage 2 unrealscript objects.
 
 Note
@@ -53,14 +56,14 @@ Maven
 -----
 ```maven
 <repository>
-    <id>L2unreal-github</id>
-    <url>https://raw.githubusercontent.com/acmi/L2unreal/mvn-repo</url>
+    <id>jitpack.io</id>
+    <url>https://jitpack.io</url>
 </repository>
 
 <dependency>
     <groupId>acmi.l2.clientmod</groupId>
     <artifactId>l2unreal</artifactId>
-    <version>1.5.4</version>
+    <version>1.5.5</version>
 </dependency>
 ```
 
@@ -68,10 +71,10 @@ Gradle
 ------
 ```gradle
 repositories {
-    maven { url "https://raw.githubusercontent.com/acmi/L2unreal/mvn-repo" }
+    maven { url 'https://jitpack.io' }
 }
 
 dependencies {
-    compile group:'acmi.l2.clientmod', name:'l2unreal', version: '1.5.4'
+    compile group:'acmi.l2.clientmod', name:'l2unreal', version: '1.5.5'
 }
 ```

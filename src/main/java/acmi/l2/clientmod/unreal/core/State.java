@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 acmi
+ * Copyright (c) 2021 acmi
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -62,8 +62,9 @@ public class State extends Struct {
 
         public static int getFlags(Flags... flags) {
             int v = 0;
-            for (Flags flag : flags)
+            for (Flags flag : flags) {
                 v |= flag.getMask();
+            }
             return v;
         }
 

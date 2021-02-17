@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 acmi
+ * Copyright (c) 2021 acmi
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -185,8 +185,9 @@ public class PropertiesUtil {
 
             for (int i = 0; i < property.getSize(); i++) {
                 Object obj = property.getAt(i);
-                if (obj == null)
+                if (obj == null) {
                     continue;
+                }
 
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
                 ObjectOutput<UnrealRuntimeContext> objBuffer = new ObjectOutputStream<>(baos, output.getCharset(), 0, output.getSerializerFactory(), output.getContext());
@@ -200,8 +201,9 @@ public class PropertiesUtil {
 
                 output.writeCompactInt(nameReference(up, template.entry.getObjectName().getName()));
                 output.writeByte(info);
-                if (type == Type.STRUCT)
+                if (type == Type.STRUCT) {
                     output.writeCompactInt(nameReference(up, ((StructProperty) template).struct.entry.getObjectName().getName()));
+                }
                 switch (size) {
                     case 5:
                         output.writeByte(bytes.length);
@@ -213,8 +215,9 @@ public class PropertiesUtil {
                         output.writeInt(bytes.length);
                         break;
                 }
-                if (i > 0)
+                if (i > 0) {
                     output.writeByte(i);
+                }
                 output.writeBytes(bytes);
             }
         }
@@ -344,12 +347,13 @@ public class PropertiesUtil {
             case 16:
                 return 4;
             default:
-                if (size < 0x100)
+                if (size < 0x100) {
                     return 5;
-                else if (size < 0x10000)
+                } else if (size < 0x10000) {
                     return 6;
-                else
+                } else {
                     return 7;
+                }
         }
     }
 
@@ -406,9 +410,11 @@ public class PropertiesUtil {
     }
 
     public static Type getType(Property property) {
-        for (Type type : Type.values())
-            if (match(property.getClass(), type))
+        for (Type type : Type.values()) {
+            if (match(property.getClass(), type)) {
                 return type;
+            }
+        }
         throw new IllegalStateException();
     }
 
@@ -428,8 +434,9 @@ public class PropertiesUtil {
 
     public static L2Property create(Property property, String structName, UnrealSerializerFactory serializer, UnrealPackage up) {
         L2Property l2property = new L2Property(property);
-        for (int i = 0; i < l2property.getSize(); i++)
+        for (int i = 0; i < l2property.getSize(); i++) {
             l2property.putAt(i, defaultValue(property, structName, serializer, up));
+        }
         return l2property;
     }
 
@@ -466,7 +473,7 @@ public class PropertiesUtil {
             return false;
         } else if (property instanceof FloatProperty) {
             return 0f;
-        } else if (property instanceof acmi.l2.clientmod.unreal.core.ObjectProperty) {
+        } else if (property instanceof ObjectProperty) {
             return 0;
         } else if (property instanceof NameProperty) {
             return unrealPackage.nameReference("None");
@@ -492,8 +499,9 @@ public class PropertiesUtil {
     }
 
     public static void removeDefaults(List<L2Property> properties, String structName, UnrealSerializerFactory serializer, UnrealPackage unrealPackage) {
-        if (properties == null)
+        if (properties == null) {
             return;
+        }
 
         for (Iterator<L2Property> it = properties.iterator(); it.hasNext(); ) {
             L2Property property = it.next();
@@ -505,15 +513,17 @@ public class PropertiesUtil {
                 java.lang.Object obj = property.getAt(i);
 
                 if (property.getTemplate() instanceof StructProperty) {
-                    if (obj == null)
+                    if (obj == null) {
                         continue;
+                    }
 
                     List<L2Property> struct = (List<L2Property>) obj;
                     removeDefaults(struct, ((StructProperty) property.getTemplate()).struct.getFullName(), serializer, unrealPackage);
-                    if (!struct.isEmpty())
+                    if (!struct.isEmpty()) {
                         del = false;
-                    else
+                    } else {
                         property.putAt(i, null);
+                    }
                 } else if (!def.equals(obj)) {
                     del = false;
                 }

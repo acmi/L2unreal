@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 acmi
+ * Copyright (c) 2021 acmi
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -55,8 +55,9 @@ public class Function extends Struct {
         output.writeShort(nativeIndex);
         output.writeByte(operatorPrecedence);
         output.writeInt(functionFlags);
-        if ((functionFlags & Flag.NET.getMask()) != 0)
+        if ((functionFlags & Flag.NET.getMask()) != 0) {
             output.writeShort(replicationOffset);
+        }
     }
 
     @Getter
@@ -152,8 +153,9 @@ public class Function extends Struct {
 
         public static int getFlags(Flag... flags) {
             int v = 0;
-            for (Flag flag : flags)
+            for (Flag flag : flags) {
                 v |= flag.getMask();
+            }
             return v;
         }
     }

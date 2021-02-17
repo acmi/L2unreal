@@ -16,6 +16,7 @@
 package acmi.l2.clientmod.unreal;
 
 import acmi.l2.clientmod.io.UnrealPackage;
+import lombok.NonNull;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.filefilter.WildcardFileFilter;
@@ -27,20 +28,19 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
-import javax.annotation.Nonnull;
 
 public interface Env {
-    @Nonnull
     File getStartDir();
 
-    @Nonnull
     List<String> getPaths();
 
     default Stream<File> listFiles() {
         return getPaths().stream().flatMap(s -> {
             File file = new File(getStartDir(), s);
             File parent = file.getParentFile();
-            if (!parent.exists()) return Stream.empty();
+            if (!parent.exists()) {
+                return Stream.empty();
+            }
             return FileUtils.listFiles(file.getParentFile(), new WildcardFileFilter(file.getName()), null).stream();
         });
     }
@@ -65,7 +65,7 @@ public interface Env {
                 .map(Optional::get);
     }
 
-    default Optional<UnrealPackage.ExportEntry> getExportEntry(@Nonnull String fullName, @Nonnull Predicate<String> fullClassName) throws UncheckedIOException {
+    default Optional<UnrealPackage.ExportEntry> getExportEntry(@NonNull String fullName, @NonNull Predicate<String> fullClassName) throws UncheckedIOException {
         String[] path = fullName.split("\\.");
         Optional<UnrealPackage.ExportEntry> entryOptional = listPackages(path[0])
                 .map(UnrealPackage::getExportTable)
@@ -73,13 +73,14 @@ public interface Env {
                 .filter(e -> e.getObjectFullName().equalsIgnoreCase(fullName))
                 .filter(e -> fullClassName.test(e.getFullClassName()))
                 .findAny();
-        if (!entryOptional.isPresent())
+        if (!entryOptional.isPresent()) {
             entryOptional = listPackages(path[0])
                     .map(UnrealPackage::getExportTable)
                     .flatMap(Collection::parallelStream)
                     .filter(e -> e.getObjectName().getName().equalsIgnoreCase(path[path.length - 1]))
                     .filter(e -> fullClassName.test(e.getFullClassName()))
                     .findAny();
+        }
         return entryOptional;
     }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 acmi
+ * Copyright (c) 2021 acmi
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -30,6 +30,7 @@ import acmi.l2.clientmod.io.RandomAccessFile;
 import acmi.l2.clientmod.io.UnrealPackage;
 import lombok.Getter;
 
+import lombok.NonNull;
 import org.apache.commons.io.FilenameUtils;
 
 import java.io.*;
@@ -42,7 +43,6 @@ import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import javax.annotation.Nonnull;
 
 public class Environment implements Env {
     private static final Logger log = Logger.getLogger(Environment.class.getName());
@@ -51,9 +51,9 @@ public class Environment implements Env {
 
     private static final Pattern PATHS_PATTERN = Pattern.compile("\\s*Paths=(.*)");
 
-    @Getter(onMethod = @__(@Nonnull))
+    @Getter
     private final File startDir;
-    @Getter(onMethod = @__(@Nonnull))
+    @Getter
     private final List<String> paths;
 
     private final Map<String, List<File>> fileCache = new HashMap<>();
@@ -61,12 +61,12 @@ public class Environment implements Env {
     private final Map<UnrealPackage, Map<String, UnrealPackage.ExportEntry[]>> entriesCache = new HashMap<>();
     private final Map<UnrealPackage, Map<String, UnrealPackage.ExportEntry[]>> entriesCache2 = new HashMap<>();
 
-    public Environment(@Nonnull File startDir, @Nonnull List<String> paths) {
+    public Environment(@NonNull File startDir, @NonNull List<String> paths) {
         this.startDir = startDir;
         this.paths = paths;
     }
 
-    public static Environment fromIni(@Nonnull File ini) throws UncheckedIOException {
+    public static Environment fromIni(File ini) throws UncheckedIOException {
         try (InputStream bis = new BufferedInputStream(new FileInputStream(ini))) {
             InputStream is = bis;
             bis.mark(28);
@@ -95,8 +95,9 @@ public class Environment implements Env {
                     .filter(s -> PATHS_PATTERN.matcher(s).matches())
                     .map(s -> s.substring(s.indexOf('=') + 1).trim())
                     .collect(Collectors.toList());
-            if (paths.isEmpty())
+            if (paths.isEmpty()) {
                 log.warning(() -> "Couldn't find any Path in file");
+            }
             File startDir = ini.getParentFile();
 
             return new Environment(startDir, paths);
@@ -142,21 +143,22 @@ public class Environment implements Env {
     }
 
     @Override
-    public Optional<UnrealPackage.ExportEntry> getExportEntry(@Nonnull String fullName, @Nonnull Predicate<String> fullClassName) throws UncheckedIOException {
+    public Optional<UnrealPackage.ExportEntry> getExportEntry(@NonNull String fullName, @NonNull Predicate<String> fullClassName) throws UncheckedIOException {
         String[] path = fullName.split("\\.");
         Optional<UnrealPackage.ExportEntry> entryOptional = listPackages(path[0])
-                .map(up -> entriesCache.get(up))
+                .map(entriesCache::get)
                 .map(map -> map.getOrDefault(fullName.toLowerCase(), new UnrealPackage.ExportEntry[0]))
                 .flatMap(Arrays::stream)
                 .filter(e -> fullClassName.test(e.getFullClassName()))
                 .findAny();
-        if (!entryOptional.isPresent())
+        if (!entryOptional.isPresent()) {
             entryOptional = listPackages(path[0])
-                    .map(up -> entriesCache2.get(up))
+                    .map(entriesCache2::get)
                     .map(map -> map.getOrDefault(path[path.length - 1].toLowerCase(), new UnrealPackage.ExportEntry[0]))
                     .flatMap(Arrays::stream)
                     .filter(e -> fullClassName.test(e.getFullClassName()))
                     .findAny();
+        }
         return entryOptional;
     }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 acmi
+ * Copyright (c) 2021 acmi
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -60,15 +60,17 @@ public class Case extends Token {
     @ReadMethod
     public void readFrom(ObjectInput<BytecodeContext> input) throws UncheckedIOException {
         nextOffset = input.readUnsignedShort();
-        if (nextOffset != DEFAULT)
+        if (nextOffset != DEFAULT) {
             condition = input.readObject(Token.class);
+        }
     }
 
     @WriteMethod
     public void writeCase(ObjectOutput<BytecodeContext> output) throws UncheckedIOException {
         output.writeShort(nextOffset);
-        if (nextOffset != DEFAULT)
+        if (nextOffset != DEFAULT) {
             output.write(condition);
+        }
     }
 
     private static final Sizer<Case> sizer =
