@@ -54,6 +54,6 @@ public class StringToINT64 extends Token {
 
     @Override
     public String toString(UnrealRuntimeContext context) {
-        return "INT64(" + value + ')';
+        return "INT64(" + value.toString(context) + ')';
     }
 }

@@ -42,6 +42,7 @@ public class BytecodeReadTest {
     public void test() {
         Environment environment = Environment.fromIni(new File(getClass().getResource("/system/L2.ini").getFile()));
         UnrealSerializerFactory serializerFactory = new UnrealSerializerFactory(environment);
+        serializerFactory.getOrCreateObject("Core.Object", t -> true);
 
         File[] files = new File("src/test/resources/system")
                 .listFiles((dir, name) -> name.endsWith(".u"));

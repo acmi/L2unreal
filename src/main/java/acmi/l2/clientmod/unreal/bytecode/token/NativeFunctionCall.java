@@ -35,6 +35,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.IntPredicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -81,6 +82,7 @@ public class NativeFunctionCall extends Token {
                 + (params == null || params.length == 0 ? ")" : Arrays.stream(params).map(Objects::toString).collect(Collectors.joining(", ", ", ", ")")));
     }
 
+    @Override
     public String toString(UnrealRuntimeContext context) {
         if (context.getSerializer() != null) {
             Optional<Function> function = context.getSerializer().getNativeFunction(nativeIndex);
@@ -101,7 +103,13 @@ public class NativeFunctionCall extends Token {
                     return f.friendlyName + b;
                 } else if (flags.contains(Function.Flag.OPERATOR)) {
                     if (f.operatorPrecedence > 0) {
-                        return params[0].toString(context) + " " + f.friendlyName + " " + params[params.length - 1].toString(context);
+                        Token left = params[0];
+                        Token right = params[params.length - 1];
+                        boolean needLeftBrackets = needBrackets(left, context, leftOpPrecedence -> leftOpPrecedence > f.operatorPrecedence);
+                        boolean needRightBrackets = needBrackets(right, context, rightOpPrecedence -> rightOpPrecedence >= f.operatorPrecedence);
+                        return (needLeftBrackets ? "(" : "") + left.toString(context) + (needLeftBrackets ? ")" : "")
+                                + " " + f.friendlyName + " "
+                                + (needRightBrackets ? "(" : "") + right.toString(context) + (needRightBrackets ? ")" : "");
                     } else {
                         return params[0].toString(context) + f.friendlyName;
                     }
@@ -111,5 +119,19 @@ public class NativeFunctionCall extends Token {
             }
         }
         return "native" + this.nativeIndex + Arrays.stream(this.params).map((p) -> p.toString(context)).collect(Collectors.joining(", ", "(", ")"));
+    }
+
+    private boolean needBrackets(Token token, UnrealRuntimeContext context, IntPredicate p) {
+        if (token instanceof NativeFunctionCall) {
+            NativeFunctionCall nfc = (NativeFunctionCall) token;
+            Optional<Function> funcOpt = context.getSerializer().getNativeFunction(nfc.nativeIndex);
+            if (funcOpt.isPresent()) {
+                Function func = funcOpt.get();
+                return p.test(func.operatorPrecedence);
+            }
+        } else {
+            return false;
+        }
+        return true;
     }
 }

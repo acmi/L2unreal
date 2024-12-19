@@ -56,6 +56,10 @@ public class NameConst extends Token {
 
     @Override
     public String toString(UnrealRuntimeContext context) {
-        return "'" + context.getUnrealPackage().nameReference(nameRef) + "'";
+        String name = context.getUnrealPackage().nameReference(nameRef);
+        if ("None".equalsIgnoreCase(name)) {
+            return "''";
+        }
+        return "'" + name + "'";
     }
 }
